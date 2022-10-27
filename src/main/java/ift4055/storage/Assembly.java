@@ -16,6 +16,7 @@ public class Assembly {
         return sequence.split("N");
     }
 
+    /*
     public Insert insert(String sequence){
         Insert insert = new Insert();
         char[] bases = sequence.toCharArray();
@@ -44,11 +45,12 @@ public class Assembly {
         }
         return insert;
     }
+    */
 
     public Segment segment(String[] sequences){
         Segment segment = new Segment();
         for (String sequence : sequences) {
-            Insert insert = insert(sequence);
+            //Insert insert = insert(sequence);
         }
         return segment;
     }

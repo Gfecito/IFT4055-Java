@@ -1,3 +1,10 @@
+What follows is HTSJDK's README; I thought it proper to leave it there, as my work depends on HTSJDK.
+You can find my code under src/main/java with the folder IFT4055, named after the code for projects at University of Montreal.
+On the first stage of development I'm making a program that can populate a binning structure based on FASTA and BAM/SAM files; entered through a command line interface
+
+
+
+
 [![Coverage Status](https://codecov.io/gh/samtools/htsjdk/branch/master/graph/badge.svg)](https://codecov.io/gh/samtools/htsjdk)
 [![Build and Test](https://github.com/samtools/htsjdk/actions/workflows/tests.yml/badge.svg?branch=master&event=push)](https://github.com/samtools/htsjdk/actions/workflows/tests.yml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.samtools/htsjdk/badge.svg)](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.github.samtools%22%20AND%20a%3A%22htsjdk%22)

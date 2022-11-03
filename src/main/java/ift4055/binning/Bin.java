@@ -1,9 +1,6 @@
 package ift4055.binning;
 
-import ift4055.elements.dataElements.Base;
-import ift4055.elements.dataElements.Insert;
-import ift4055.elements.dataElements.Match;
-import ift4055.elements.dataElements.Syndrome;
+import ift4055.elements.dataElements.*;
 
 import java.util.BitSet;
 import java.util.HashSet;
@@ -18,10 +15,12 @@ public class Bin {
 
 
     /**
-     * Factories and bases
+     * Factories
      */
     private Base.Factory baseFactory;
     private Syndrome.Factory syndromeFactory;
     private Insert.Factory insertFactory;
     private Match.Factory matchFactory;
+    private Segment.Factory segmentFactory;
+    private Group.Factory groupFactory;
 }

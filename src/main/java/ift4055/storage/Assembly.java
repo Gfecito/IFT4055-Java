@@ -46,7 +46,7 @@ public class Assembly {
         return insert;
     }
     */
-
+/*
     public Segment segment(String[] sequences){
         Segment segment = new Segment();
         for (String sequence : sequences) {
@@ -61,5 +61,5 @@ public class Assembly {
             Segment segment = segment(split(chromosome));
         }
         return group;
-    }
+    }*/
 }

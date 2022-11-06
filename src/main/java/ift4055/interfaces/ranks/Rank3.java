@@ -5,7 +5,9 @@ import ift4055.elements.dataElements.Base;
 import ift4055.interfaces.Element;
 
 public interface Rank3 extends Element{
-
+    // Bin access
+    public Bin getBin();
+    public boolean isSameBin(Element E);
 
     // Parents and ancestors in the element tree.
     public Element getParent();

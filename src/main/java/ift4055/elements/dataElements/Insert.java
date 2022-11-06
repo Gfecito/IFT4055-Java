@@ -1,27 +1,24 @@
 package ift4055.elements.dataElements;
 import ift4055.binning.Bin;
-import ift4055.elements.Element;
 import ift4055.interfaces.Element;
-import ift4055.interfaces.ElementMethods;
 import ift4055.interfaces.ranks.Rank2;
-import ift4055.interfaces.ranks.Rank3;
-
-import java.util.BitSet;
 
 public class Insert implements Rank2 {
     private int strand;    // encodes for 00 (-1) or 11 (1)
     private int rMin;
     private int wMin;
+    private int span;
 
     private Segment parent;
     private int[] indexRange;   // For children. Same bin
+    private Base.Factory baseFactory;
 
-    private Insert(int strand, int rMin, int wMin, Segment parent, int[] indexRange){
-        this.strand=strand;
-        this.rMin=rMin;
-        this.wMin=wMin;
-        this.parent=parent;
-        this.indexRange=indexRange;
+    private Insert(int strand, int rMin, int span, int wMin){
+        this.strand = strand;
+        this.rMin = rMin;
+        this.span = span;
+        this.wMin = wMin;
+        this.baseFactory = new Base.Factory(span+1);
     }
     public void setParent(Segment parent) {
         this.parent = parent;
@@ -32,7 +29,7 @@ public class Insert implements Rank2 {
      */
     @Override
     public Bin getBin() {
-        return null;
+        return parent.getBin();
     }
 
     /**
@@ -73,7 +70,7 @@ public class Insert implements Rank2 {
      */
     @Override
     public Element getRoot() {
-        return null;
+        return parent.getRoot();
     }
 
     /**
@@ -82,7 +79,8 @@ public class Insert implements Rank2 {
      */
     @Override
     public Element getChild(int index) {
-        return null;
+
+        return parent; // ?
     }
 
     /**
@@ -90,7 +88,7 @@ public class Insert implements Rank2 {
      */
     @Override
     public Element getChild() {
-        return null;
+        return getChild(0);
     }
 
     /**
@@ -106,7 +104,7 @@ public class Insert implements Rank2 {
      */
     @Override
     public int getWMin() {
-        return 0;
+        return wMin;
     }
 
     /**
@@ -114,7 +112,7 @@ public class Insert implements Rank2 {
      */
     @Override
     public int getWMax() {
-        return 0;
+        return wMin+span;
     }
 
     /**
@@ -122,7 +120,7 @@ public class Insert implements Rank2 {
      */
     @Override
     public int getRMin() {
-        return 0;
+        return rMin;
     }
 
     /**
@@ -138,7 +136,7 @@ public class Insert implements Rank2 {
      */
     @Override
     public int getLength() {
-        return 0;
+        return span+1;
     }
 
     /**
@@ -146,7 +144,7 @@ public class Insert implements Rank2 {
      */
     @Override
     public int getSpan() {
-        return 0;
+        return span;
     }
 
     /**
@@ -154,7 +152,7 @@ public class Insert implements Rank2 {
      */
     @Override
     public int getStrand() {
-        return 0;
+        return strand;
     }
 
     /**
@@ -162,7 +160,7 @@ public class Insert implements Rank2 {
      */
     @Override
     public boolean isReverseStrand() {
-        return false;
+        return ((1-strand)/2)==1;
     }
 
     /**
@@ -187,31 +185,18 @@ public class Insert implements Rank2 {
      */
     @Override
     public void delete() {
-
+        setParent(null);
     }
 
     public class Factory{
         private Insert[] inserts;
         private int length;
-
-        public Insert getElement(int i) {
-            return this.inserts[i];
+        // dnaSequence might be byte[][]?
+        public Insert newInsert(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset){
+            Insert insert = new Insert(strand, rMin, span, wMin);
+            for(int i=0; i<=span; i++) insert.baseFactory.addBase(dnaSequence[i+offset]);
+            return insert;
         }
 
-        public void addElement(int strand, int rMin, int wMin, Segment parent, int[] indexRange){
-            makeElement(strand, rMin, wMin, parent, indexRange);
-        }
-        public void makeElement(int strand, int rMin, int wMin, Segment parent, int[] indexRange){
-            this.inserts[this.length] = new Insert(strand, rMin, wMin, parent, indexRange);
-            this.length = this.length+1;
-        }
-
-        public void deleteElement(int i){
-            Insert insert = this.inserts[i];
-            deleteElement(insert);
-        }
-        public void deleteElement(Insert insert){
-            insert.setParent(null);
-        }
     }
 }

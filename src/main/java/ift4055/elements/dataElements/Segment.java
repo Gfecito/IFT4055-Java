@@ -1,5 +1,6 @@
 package ift4055.elements.dataElements;
 import ift4055.binning.Bin;
+import ift4055.binning.BinningScheme;
 import ift4055.interfaces.Element;
 import ift4055.interfaces.ranks.Rank2;
 import ift4055.interfaces.ranks.Rank3;
@@ -7,12 +8,50 @@ import ift4055.interfaces.ranks.Rank4;
 
 
 public class Segment implements Rank3{
+
+    public interface SegmentChild extends Rank3, Rank2{
+        public void setParent(Element E);
+    }
+    public interface SegmentParent extends SegmentChild, Rank4{}
+
+    private String name;
+    private SegmentChild child;
+    private SegmentParent parent;
+    private Rank2[] descendants;
+    private BinningScheme scheme;
+    private int index;
+
+    private Segment(SegmentChild child, SegmentParent parent){
+        this.child = child;
+        this.parent = parent;
+    }
+
     /**
      * @return The bin that contains this
      */
+    // In this context, are depth and height equivalent or are they inverses?
+    private int[] idx2depth(int j){
+        double d,k;
+        int alpha = scheme.getAlpha();
+
+        double twoToAlpha = Math.pow(2,alpha);
+        d = Math.ceil(Math.log(1+j*(twoToAlpha-1))/alpha);
+
+        double twoToAlphaD = Math.pow(2,alpha*d);
+        k =  j - (twoToAlphaD-1)/(twoToAlpha-1);
+
+        int[] depthNOffset = {(int) d, (int) k};
+        return depthNOffset;
+    }
     @Override
     public Bin getBin() {
-        return null;
+        int[] depthNOffset = idx2depth(index);
+        int height = depthNOffset[0];
+        int offset = depthNOffset[1];
+        return scheme.findBin(height, offset);
+    }
+    public BinningScheme getScheme(){
+        return scheme;
     }
 
     /**
@@ -21,26 +60,6 @@ public class Segment implements Rank3{
     @Override
     public boolean isSameBin(Element E) {
         return (this.getBin()==E.getBin());
-    }
-
-    private interface SegmentChild extends Rank3, Rank2{}
-    private interface SegmentParent extends SegmentChild, Rank4{}
-
-    private SegmentChild child;
-    private SegmentParent parent;
-    private Rank2[] descendants;
-
-    private Segment(SegmentChild child, SegmentParent parent){
-        this.child=child;
-        this.parent=parent;
-    }
-
-    public void setParent(SegmentParent parent) {
-        this.parent = parent;
-    }
-
-    public void setChild(SegmentChild child){
-        this.child = child;
     }
 
     public SegmentParent getParent() {
@@ -52,7 +71,7 @@ public class Segment implements Rank3{
      */
     @Override
     public void setParent(Element E) {
-        this.setParent((SegmentParent) E);
+        this.parent = (SegmentParent) E;
     }
 
     /**
@@ -60,7 +79,7 @@ public class Segment implements Rank3{
      */
     @Override
     public Element getContainer() {
-        return null;
+        return parent;
     }
 
     /**
@@ -68,7 +87,8 @@ public class Segment implements Rank3{
      */
     @Override
     public Element getRoot() {
-        return null;
+        if(parent==null) return this;
+        return this.parent.getRoot();
     }
 
     /**
@@ -102,7 +122,7 @@ public class Segment implements Rank3{
      */
     @Override
     public void setChild(Element E) {
-        setChild((SegmentChild) E);
+        this.child = (SegmentChild) E;
     }
 
     /**
@@ -151,15 +171,58 @@ public class Segment implements Rank3{
      */
     @Override
     public Base getNucleotideAt(int index) {
-        return 0;
+        return null;
     }
 
     /**
-     *
+     *  Removes element.
      */
     @Override
-    public void delete() {
+    public void delete() { this.parent=null; }
 
+
+
+
+    // Update element tree, and return a segment containing x and members of s.
+    public Segment combine(Segment s, SegmentChild x){
+        Bin bin = Bin.lowestCommonAncestor(s.getBin(),x.getBin());
+        Segment v;
+        // Is x a segment, or a match/insert?
+        if(x instanceof Rank3) v = (Segment) x;
+        else {v=bin.segmentFactory.newSegment();v.setChild(x);x.setParent(v);}
+
+        // Insertion at head
+        if(bin==s.getBin()){Element temp=s.getChild();s.setChild(v);v.setParent(temp); return s;}
+
+        // New container in B
+        Segment u,w;
+        u = bin.segmentFactory.newSegment(); v.setParent(u);
+        w = bin.segmentFactory.newSegment();
+        w.setChild(s); u.setParent(s.getParent()); u.setChild(w); w.setParent(v);
+        Bin uBin, uPBin;
+        uBin = u.getBin();
+        uPBin = u.getParent().getBin();
+        if(Bin.lowestCommonAncestor(uBin,uPBin)!=uPBin) raiseGroup(u);
+        return u;
+    }
+    // Updates binning for rank4 parent of u.
+    public Rank4 raiseGroup(Segment u){
+        Element v;
+        Group w;
+        Bin bin;
+        int m;
+        v = u.getParent(); bin = Bin.lowestCommonAncestor(u.getBin(),v.getBin());
+        if(bin==v.getBin()) return (Rank4) v;
+
+        m = u.getMembers().length;
+        w = bin.groupFactory.newGroup(m);
+        for (int i = 0; i < m; i++) {
+            w.setChild(i,u.getChild(i));
+            ((SegmentChild) u.getChild(i)).setParent(w);
+        }
+        w.setName(u.name);
+        u.delete();
+        return w;
     }
 
     public class Factory{
@@ -226,12 +289,21 @@ public class Segment implements Rank3{
         }
         public void deleteElement(Segment toDelete){
             // Inserted on the free chain at the head, after the sentinel, before the previous head.
-            toDelete.setParent(null);
+            toDelete.delete();
 
             Segment sentinel = this.sentinel;
             Segment head = (Segment) sentinel.getChild();
             sentinel.setChild((SegmentChild) toDelete);
             toDelete.setChild((SegmentChild) head);
+        }
+
+
+        // Returns a segment instance with child and parent pointing to self.
+        public Segment newSegment(){
+            Segment segment = new Segment(null,null);
+            segment.setChild(segment);
+            segment.setParent(segment);
+            return segment;
         }
     }
 

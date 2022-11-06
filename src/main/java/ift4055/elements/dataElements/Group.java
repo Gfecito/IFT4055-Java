@@ -5,20 +5,29 @@ import ift4055.interfaces.ranks.Rank3;
 import ift4055.interfaces.ranks.Rank4;
 
 public class Group implements Rank4 {
+    private String name;
     private Rank3[] children;    // fixed-length arrays of rank-3 Group children
+    private Bin bin;
 
     public Group(int childrenCount){
         this.children = new Rank3[childrenCount];
         for (int i = 0; i < childrenCount; i++) this.children[i] = null;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     /**
      * @return the bin that contains this
      */
     @Override
     public Bin getBin() {
-        return null;
+        return bin;
     }
 
     /**
@@ -35,7 +44,7 @@ public class Group implements Rank4 {
      */
     @Override
     public Element getParent() {
-        return null;
+        return this;
     }
 
     /**
@@ -120,15 +129,19 @@ public class Group implements Rank4 {
             this.groups = new Group[this.size];
         }
 
+
+        public Group newGroup(int nMembers){
+            return new Group(nMembers);
+        }
+
+
         public Group getElement(int index){
             return this.groups[index];
         }
-        public void addElement(int childrenCount){
-            makeElement(childrenCount);
-        }
-        public void makeElement(int childrenCount){
-            this.groups[size] = new Group(childrenCount);
+        public void addElement(Group group){
+            this.groups[size] = group;
             this.size++;
+
         }
 
         public void deleteElement(int i){

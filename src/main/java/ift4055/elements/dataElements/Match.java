@@ -1,35 +1,30 @@
 package ift4055.elements.dataElements;
 
 import ift4055.binning.Bin;
-import ift4055.elements.Element;
 import ift4055.interfaces.Element;
-import ift4055.interfaces.ElementMethods;
 import ift4055.interfaces.ranks.Rank2;
-import ift4055.interfaces.ranks.Rank3;
-
-import java.util.BitSet;
-import java.util.List;
 
 // Placed in the smallest bin covering the interval Rmin(M)..Rmax(M)
 public class Match implements Rank2 {
     private int strand;    // encodes for 00 (-1) or 11 (1)
     private int rMin;
+    private int span;
     private int wMin;
 
-    private Rank3 parent;
-    private int[] indexRange;   // For children. Same bin
-    private Base[] children;
 
-    public void setParent(Rank3 parent) {
+    private Segment parent;
+    private int[] indexRange;   // For children. Same bin
+    private Syndrome[] children;
+
+    public void setParent(Segment parent) {
         this.parent = parent;
     }
 
-    private Match(int strand, int rMin, int wMin, Rank3 parent, Base[] children, int[] indexRange){
+    private Match(int strand, int rMin, int span, int wMin){
         this.strand = strand;
         this.rMin = rMin;
+        this.span = span;
         this.wMin = wMin;
-        this.parent = parent;
-        this.indexRange = indexRange;
     }
 
     /**
@@ -37,7 +32,7 @@ public class Match implements Rank2 {
      */
     @Override
     public Bin getBin() {
-        return null;
+        return parent.getBin();
     }
 
     /**
@@ -62,7 +57,7 @@ public class Match implements Rank2 {
      */
     @Override
     public void setParent(Element E) {
-        this.parent = (Rank3) E;
+        this.parent = (Segment) E;
     }
 
     /**
@@ -70,7 +65,7 @@ public class Match implements Rank2 {
      */
     @Override
     public Element getContainer() {
-        return null;
+        return parent.getContainer();
     }
 
     /**
@@ -78,7 +73,7 @@ public class Match implements Rank2 {
      */
     @Override
     public Element getRoot() {
-        return null;
+        return parent.getRoot();
     }
 
     /**
@@ -87,7 +82,7 @@ public class Match implements Rank2 {
      */
     @Override
     public Element getChild(int index) {
-        return children[index];
+        return (Element) children[index];
     }
 
     /**
@@ -103,7 +98,7 @@ public class Match implements Rank2 {
      */
     @Override
     public Element[] getMembers() {
-        return children;
+        return (Element[]) children;
     }
 
     /**
@@ -111,7 +106,7 @@ public class Match implements Rank2 {
      */
     @Override
     public int getWMin() {
-        return 0;
+        return wMin;
     }
 
     /**
@@ -119,7 +114,7 @@ public class Match implements Rank2 {
      */
     @Override
     public int getWMax() {
-        return 0;
+        return wMin + span;
     }
 
     /**
@@ -127,7 +122,7 @@ public class Match implements Rank2 {
      */
     @Override
     public int getRMin() {
-        return 0;
+        return rMin;
     }
 
     /**
@@ -135,7 +130,7 @@ public class Match implements Rank2 {
      */
     @Override
     public int getRMax() {
-        return 0;
+        return rMin + span*strand;
     }
 
     /**
@@ -143,7 +138,7 @@ public class Match implements Rank2 {
      */
     @Override
     public int getLength() {
-        return 0;
+        return span+1;
     }
 
     /**
@@ -151,7 +146,7 @@ public class Match implements Rank2 {
      */
     @Override
     public int getSpan() {
-        return 0;
+        return span;
     }
 
     /**
@@ -159,7 +154,7 @@ public class Match implements Rank2 {
      */
     @Override
     public int getStrand() {
-        return 0;
+        return strand;
     }
 
     /**
@@ -167,7 +162,7 @@ public class Match implements Rank2 {
      */
     @Override
     public boolean isReverseStrand() {
-        return false;
+        return ((1-strand)/2)==1;        // Java doesn't allow boolean to int conversion
     }
 
     /**
@@ -175,7 +170,11 @@ public class Match implements Rank2 {
      */
     @Override
     public int getDiagonal() {
-        return 0;
+        int x,y,s;
+        s = getStrand();
+        x = getRMin();
+        y = getRMax();
+        return x-r*(x-y);
     }
 
     /**
@@ -184,32 +183,45 @@ public class Match implements Rank2 {
      */
     @Override
     public Base getNucleotideAt(int index) {
-        return (Base) getChild(indexRange[index]);
+        Syndrome syndromeElem = (Syndrome) getChild(indexRange[index]);
+        int syndrome = syndromeElem.getSyndrome();
+        int readPosition = syndromeElem.getReadPosition();
+
+        return ;
     }
 
     /**
-     *
+     * Lazy deletion
      */
     @Override
-    public void delete() {
-        this.parent = null;
-    }
+    public void delete() { this.parent = null; }
 
     // M operation of a CIGAR alignment
     public class Factory {
         private Match[] matches;
         private int length;
-
-        public Match getElement(int i) {
-            return this.matches[i];
-        }
-
-        public void addElement(int strand, int rMin, int wMin, Segment parent, int[] indexRange){
-            makeElement(strand, rMin, wMin, parent, indexRange);
-        }
-        public void makeElement(int strand, int rMin, int wMin, Segment parent, int[] indexRange) {
-            this.matches[this.length] = new Match(strand, rMin, wMin, parent, indexRange);
-            this.length = this.length + 1;
+        public Match newMatch(int strand, int rMin, int span, int wMin, Seq[] dnaSequence){
+            Match match = new Match(strand, rMin, span, wMin);
+            /*
+            for(char c: dnaSequence.toCharArray()){
+                c = Character.toLowerCase(c);       // Normalize
+                int base;
+                switch(c){
+                    case 'a':
+                        base = 0;
+                        break;
+                    case 'g':
+                        base = 1;
+                        break;
+                    case 'c':
+                        base = 2;
+                        break;
+                    case 't':
+                        base = 3;
+                        break;
+                }
+            }*/
+            return match;
         }
 
         public void deleteElement(int i) {

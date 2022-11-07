@@ -1,6 +1,6 @@
 package ift4055.elements.dataElements;
 import ift4055.binning.Bin;
-import ift4055.binning.BinningScheme;
+import ift4055.binning.Scheme;
 import ift4055.interfaces.Element;
 import ift4055.interfaces.ranks.Rank2;
 import ift4055.interfaces.ranks.Rank3;
@@ -18,7 +18,7 @@ public class Segment implements Rank3{
     private SegmentChild child;
     private SegmentParent parent;
     private Rank2[] descendants;
-    private BinningScheme scheme;
+    private Scheme scheme;
     private int index;
 
     private Segment(SegmentChild child, SegmentParent parent){
@@ -50,7 +50,7 @@ public class Segment implements Rank3{
         int offset = depthNOffset[1];
         return scheme.findBin(height, offset);
     }
-    public BinningScheme getScheme(){
+    public Scheme getScheme(){
         return scheme;
     }
 
@@ -184,7 +184,7 @@ public class Segment implements Rank3{
 
 
     // Update element tree, and return a segment containing x and members of s.
-    public Segment combine(Segment s, SegmentChild x){
+    public static Segment combine(Segment s, SegmentChild x){
         Bin bin = Bin.lowestCommonAncestor(s.getBin(),x.getBin());
         Segment v;
         // Is x a segment, or a match/insert?
@@ -206,7 +206,7 @@ public class Segment implements Rank3{
         return u;
     }
     // Updates binning for rank4 parent of u.
-    public Rank4 raiseGroup(Segment u){
+    public static Rank4 raiseGroup(Segment u){
         Element v;
         Group w;
         Bin bin;

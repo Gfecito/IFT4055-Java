@@ -1,11 +1,13 @@
 package ift4055.binning;
+import ift4055.elements.dataElements.Group;
 import ift4055.elements.dataElements.Segment;
 import ift4055.interfaces.Element;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
-public class BinningScheme {
-    private Bin[][] bins;
+public class Scheme {
+    private ArrayList<Bin[]> bins;
     private HashMap<String, Element>  lookupTable;
     private int length;
     private Segment segment;
@@ -14,6 +16,13 @@ public class BinningScheme {
     private int alpha;
     private int beta;
 
+    public Scheme(){
+        this.segment = null;
+    }
+    public Scheme(int nMembers, int indirectionDepth){
+        //Bin root = new Bin(0,0);
+        //root.groupFactory.newGroup(nMembers);
+    }
 
     public int getAlpha() {
         return alpha;
@@ -25,7 +34,7 @@ public class BinningScheme {
 
     // Find bin by heigth and offset
     public Bin findBin(int height, int offset){
-        return bins[height][offset];
+        return bins.get(height)[offset];
     }
     // Get max height
     public int maxHeight(){
@@ -45,7 +54,7 @@ public class BinningScheme {
         int height = (lg+a-1)/a;                    // integer division with rounding up
         int offset = start >>> (a*height+b);        // bin offset
         Bin bin = new Bin(height, offset);
-        bins[height][offset] = bin;
+        bins.get(height)[offset] = bin;
         return bin;
     }
     // Defining element

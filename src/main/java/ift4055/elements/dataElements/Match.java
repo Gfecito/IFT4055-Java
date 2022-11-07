@@ -200,7 +200,7 @@ public class Match implements Rank2 {
     public class Factory {
         private Match[] matches;
         private int length;
-        public Match newMatch(int strand, int rMin, int span, int wMin, Seq[] dnaSequence){
+        public Match newMatch(int strand, int rMin, int span, int wMin, byte[][] dnaSequence){
             Match match = new Match(strand, rMin, span, wMin);
             /*
             for(char c: dnaSequence.toCharArray()){

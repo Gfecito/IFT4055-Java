@@ -7,7 +7,7 @@ public class Bin {
     private int offset;
     private int height;
     private int index;
-    private BinningScheme container;
+    private Scheme container;
     private String annotatedGenomicPosition;
     private int[][] intervals;
     private HashSet<int[]>[] intervalSets;
@@ -57,7 +57,7 @@ public class Bin {
         while(idepth(a)<idepth(b)) b = bin(ref(b));
         while(ref(a)!=ref(b)) {a = bin(ref(a)); b = bin(ref(b));}
         // Now a and b are in the same binning scheme
-        BinningScheme shared = a.container;
+        Scheme shared = a.container;
         alpha = shared.getAlpha();
         // Bin indexes
         j = a.index;

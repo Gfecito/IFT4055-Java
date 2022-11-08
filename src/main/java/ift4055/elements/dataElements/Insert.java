@@ -1,6 +1,6 @@
 package ift4055.elements.dataElements;
 import ift4055.binning.Bin;
-import ift4055.interfaces.Element;
+import ift4055.elements.Element;
 import ift4055.interfaces.ranks.Rank2;
 
 public class Insert implements Rank2 {

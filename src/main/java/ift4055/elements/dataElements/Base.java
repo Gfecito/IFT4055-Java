@@ -1,6 +1,5 @@
 package ift4055.elements.dataElements;
 
-import ift4055.interfaces.Element;
 import ift4055.interfaces.ranks.Rank1;
 
 // Storage class for nucleotides

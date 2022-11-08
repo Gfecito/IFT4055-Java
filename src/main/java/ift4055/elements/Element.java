@@ -1,7 +1,6 @@
-package ift4055.interfaces;
+package ift4055.elements;
 
 import ift4055.binning.Bin;
-import ift4055.elements.dataElements.Base;
 
 public interface Element {
     public default Bin getBin(){

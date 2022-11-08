@@ -1,7 +1,6 @@
 package ift4055.binning;
-import ift4055.elements.dataElements.Group;
 import ift4055.elements.dataElements.Segment;
-import ift4055.interfaces.Element;
+import ift4055.elements.Element;
 
 import java.util.ArrayList;
 import java.util.HashMap;

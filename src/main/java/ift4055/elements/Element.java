@@ -10,7 +10,9 @@ public interface Element {
         return getBin().equals(E.getBin());
     }
 
-    public int getRank();
+    public default int getRank(){
+        return 1;
+    }
 
     public default Element getParent(){
         return getParent(0);
@@ -24,7 +26,79 @@ public interface Element {
     public default Element getChild(int index){
         throw new UnsupportedOperationException();
     }
+
+
+
+    public interface Rank1 extends Element{
+        // DNA sequences
+        public default Element getNucleotideAt(int index){
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public interface Base extends Rank1{}
+    public interface Syndrome extends Rank1{}
+
+
+
+    public interface Rank2 extends Element{
+        @Override
+        public default int getRank(){
+            return 2;
+        }
+
+        public void setParent(Element E);
+        public default Element getContainer(){
+            throw new UnsupportedOperationException();
+        }
+        public default Element getRoot(){
+            throw new UnsupportedOperationException();
+        }
+
+        // Children and descendants in the element tree
+        public Element[] getMembers();
+
+
+        // Genome coordinates
+        public int getWMin();
+        public int getWMax();
+        public int getRMin();
+        public int getRMax();
+        public int getLength();
+        public int getSpan();
+
+
+        // Strand calculations
+        public default int getStrand(){
+            throw new UnsupportedOperationException();
+        }
+
+        public default boolean isReverseStrand(){
+            return ((1-getStrand())/2)==1;
+        }
+        public int getDiagonal();
+
+
+        // DNA sequences
+        public default Element getNucleotideAt(int index){
+            return (Rank1) getMembers()[index];
+        }
+
+
+        // Deletion
+        public void delete();
+    }
+
+    public interface Insert extends Rank2{}
+    public interface Match extends Rank2{}
+
+
+
     public interface Segment extends Element{
+        @Override
+        public default int getRank(){
+            return 3;
+        }
 
         // Parents and ancestors in the element tree.
         public default void setParent(Element E){
@@ -80,17 +154,44 @@ public interface Element {
         public void delete();
     }
 
-    public interface Rank2 extends Element{
-        public void setParent(Element E);
-        public default Element getContainer(){
-            throw new UnsupportedOperationException();
-        }
-        public default Element getRoot(){
-            throw new UnsupportedOperationException();
+
+    public interface Group extends Element{
+        @Override
+        public default int getRank(){
+            return 4;
         }
 
+        @Override
+        public default Element getParent() {
+            return this;
+        }
+
+        // Parents and ancestors in the element tree.
+        public default void setParent(Element E){
+            throw new UnsupportedOperationException();
+        }
+        public default Element getContainer(){
+            return this;
+        }
+        public default Element getRoot(){
+            return this;
+        }
+
+
         // Children and descendants in the element tree
-        public Element[] getMembers();
+        public default Element[] getMembers(){
+            throw new UnsupportedOperationException();
+        }
+        public default void setChild(int index, Element E){
+            throw new UnsupportedOperationException();
+        }
+        public default void setChild(Element E){
+            setChild(0,E);
+        }
+        public default int numChildren(){
+            return getMembers().length;
+        }
+
 
 
         // Genome coordinates
@@ -98,42 +199,14 @@ public interface Element {
         public int getWMax();
         public int getRMin();
         public int getRMax();
-        public int getLength();
-        public int getSpan();
 
-
-        // Strand calculations
-        public default int getStrand(){
-            throw new UnsupportedOperationException();
-        }
-
-        public default boolean isReverseStrand(){
-            return ((1-getStrand())/2)==1;
-        }
-        public int getDiagonal();
 
 
         // DNA sequences
-        public default Element getNucleotideAt(int index){
-            return (Rank1) getMembers()[index];
-        }
+        public Base getNucleotideAt(int index);
 
 
         // Deletion
         public void delete();
     }
-
-    public interface Insert extends Rank2{}
-    public interface Match extends Rank2{}
-
-
-    public interface Rank1 extends Element{
-        // DNA sequences
-        public default Element getNucleotideAt(int index){
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    public interface Base extends Rank1{}
-    public interface Syndrome extends Rank1{}
 }

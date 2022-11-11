@@ -1,44 +1,48 @@
 package ift4055.binning;
 
-import ift4055.elements.dataElements.*;
+import ift4055.elements.Element;
+import ift4055.elements.Element.*;
+import ift4055.elements.factories.*;
+
 import java.util.HashSet;
 
 public class Bin {
-    private int offset;
-    private int height;
-    private int index;
-    private Scheme container;
+    // These attributes need a revision. TODO
+    private final int offset;
+    private final int height;
+    private final int index;
+    private final Scheme container;
+    // Do these matter?
     private String annotatedGenomicPosition;
     private int[][] intervals;
     private HashSet<int[]>[] intervalSets;
 
 
-    public Bin(int height, int offset){
+    public Bin(int height, int offset, Scheme scheme){
         this.height = height;
         this.offset = offset;
+        this.container = scheme;
+        index = scheme.depth2idx(height, offset);
     }
     /**
      * Factories
      */
-    public Base.Factory baseFactory;
-    public Syndrome.Factory syndromeFactory;
-    public Insert.Factory insertFactory;
-    public Match.Factory matchFactory;
-    public Segment.Factory segmentFactory;
-    public Group.Factory groupFactory;
+    public BaseFactory baseFactory;
+    public SyndromeFactory syndromeFactory;
+    public InsertFactory insertFactory;
+    public MatchFactory matchFactory;
+    public SegmentFactory segmentFactory;
+    public GroupFactory groupFactory;
 
 
-    /**
-     * Methods
-     */
 
     /**
-     * Find least common ancestor
+     * Find the closest common ancestor
      */
-    private static int idepth(Bin a){
+    public static int idepth(Bin a){
         return a.container.getIndirectionDepth();
     }
-    private static Segment ref(Bin a){
+    public static Segment ref(Bin a){
         return a.container.getSegment();
     }
     // How exactly should I get a bin from the reference element of its container?
@@ -47,7 +51,7 @@ public class Bin {
     // Ok so how do I find that?
     private static Bin bin(Segment s){
         // Here I get the parent, easy
-        Segment.SegmentParent parent = s.getParent();
+        Element parent = s.getParent();
         // Get the bin!
         return parent.getBin();
     }

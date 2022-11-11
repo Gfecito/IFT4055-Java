@@ -1,20 +1,9 @@
 package ift4055.storage;
-import ift4055.elements.dataElements.Insert;
-import ift4055.elements.dataElements.Base;
-import ift4055.elements.dataElements.Segment;
-import ift4055.elements.dataElements.Group;
-
-import java.util.BitSet;
-import java.util.LinkedList;
 import java.util.List;
 
 public class Assembly {
     private List<Chromosome> chromosomeList;
 
-    public String[] split(Chromosome x){
-        String sequence = x.getSequence();
-        return sequence.split("N");
-    }
 
     /*
     public Insert insert(String sequence){

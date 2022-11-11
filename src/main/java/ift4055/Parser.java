@@ -5,9 +5,7 @@ import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import ift4055.binning.Scheme;
 import ift4055.binning.Bin;
-import ift4055.elements.dataElements.Group;
-import ift4055.elements.dataElements.Insert;
-import ift4055.elements.dataElements.Segment;
+import ift4055.elements.Element.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,34 +44,21 @@ public class Parser {
     public Scheme storeChromosomes(Scheme scheme, FastaSequenceFile reader, String name){
         Group genome = null;
         genome.setName(name);
-        Bin root = new Bin(-1,-1);
+        Bin root = new Bin(-1,-1, scheme);
         // For each element in root bin
 
         Segment c = root.segmentFactory.newSegment();
         Insert x = root.insertFactory.newInsert(-1,-1,-1,-1,null,-1);
-        c = Segment.combine(c, (Segment.SegmentChild) x);
+        c = Scheme.combine(c, x);
+        return scheme;
     }
 
     public void readSamRecord(SAMRecord record){
-        record.getReadName();
+        String name = record.getReadName();
+    }
+
+
+    private String[] split(String chromosome){
+        return chromosome.split("N");
     }
 }
-
-/*
-    //is this the best pattern to iterate a BAM and also query mate alignments?
-    SamReaderFactory bamFact = SamReaderFactory.makeDefault();
-    bamFact.validationStringency(ValidationStringency.SILENT);
-            try (SamReader sam = bamFact.open(inputBam);SamReader mateReader = bamFact.open(inputBam))
-        {
-        try (SAMRecordIterator it = sam.queryOverlapping(refName, start, stop))
-        {
-        while (it.hasNext())
-        {
-        SAMRecord r = it.next();
-        SAMRecord mate = mateReader.queryMate(r);
-
-        //do stuff
-        }
-        }
-        }
-*/

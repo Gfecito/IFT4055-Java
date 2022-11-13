@@ -5,23 +5,33 @@ import ift4055.elements.Element;
 import ift4055.elements.Element.Segment;
 import ift4055.elements.Factory;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MatchFactory implements Factory.Match{
-    private final List<Match> objects;
+    private Match[] objects;
+    private int index;
     Bin bin;
 
     public MatchFactory(Bin bin){
-        objects = new ArrayList<>();
+        objects = new Match[16];
+        index = 0;
         this.bin = bin;
     }
 
-    public Match newMatch(int strand, int rMin, int span, int wMin, byte[] dnaSequence) {
+    private void expandCapacity(){
+        int c = objects.length;
+        c = c%3==0? 3*c/2: 4*c/3;
+        Match[] newObjects = new Match[c];
+        for (int i = 0; i < objects.length; i++)
+            newObjects[i] = objects[i];
+
+        this.objects = newObjects;
+    }
+
+    public Match newMatch(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset) {
         Segment parent = Bin.ref(bin);
         Match match = new Match(strand, rMin, span, wMin, parent);
         // Add children
-        objects.add(match);
+        objects[index] = match;
+        index++;
         return match;
     }
 
@@ -57,27 +67,23 @@ public class MatchFactory implements Factory.Match{
         }
 
 
-        public int getWMin() {
+        public long getWMin() {
             return wMin;
         }
 
-        public int getWMax() {
-            return wMin + span;
+        public long getWMax() {
+            return wMin + getLength();
         }
 
-        public int getRMin() {
+        public long getRMin() {
             return rMin;
         }
 
-        public int getRMax() {
-            return rMin + span*strand;
+        public long getRMax() {
+            return rMin + span*getLength();
         }
 
-        public int getLength() {
-            return span+1;
-        }
-
-        public int getSpan() {
+        public long getSpan() {
             return span;
         }
 
@@ -87,9 +93,9 @@ public class MatchFactory implements Factory.Match{
 
 
         // DNA sequences
+        // Search recursively
         public Base getNucleotideAt(int index){
-            Element container = getChild(index/16);
-            return container.getNucleotideAt(index%16);
+            return getChild(index).getNucleotideAt(0);
         }
 
         public void setParent(Element E) {

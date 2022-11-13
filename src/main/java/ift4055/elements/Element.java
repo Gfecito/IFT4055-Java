@@ -30,17 +30,24 @@ public interface Element {
     }
 
     // Genome coordinates
-    int getWMin();
-    int getWMax();
-    int getRMin();
-    int getRMax();
+    long getWMin();
+    long getWMax();
+    long getRMin();
+    long getRMax();
+
+    default long getLength(){
+        return getSpan()+1;
+    }
+    long getSpan();
 
     // DNA sequences
     Base getNucleotideAt(int index);
 
     interface Rank1 extends Element{}
 
-    interface Base extends Rank1{}
+    interface Base extends Rank1{
+        Base syndromize(int syndrome);
+    }
     interface Syndrome extends Rank1{}
 
 
@@ -64,11 +71,6 @@ public interface Element {
         Element[] getMembers();
 
 
-
-        int getLength();
-        int getSpan();
-
-
         // Strand calculations
         int getStrand();
 
@@ -76,11 +78,12 @@ public interface Element {
             return ((1-getStrand())/2)==1;
         }
         default int getDiagonal() {
-            int x,y,s;
+            long x,y;
+            int s;
             s = getStrand();
             x = getRMin();
             y = getRMax();
-            return x-s*(x-y);
+            return (int) (x-s*(x-y));
         }
 
         // Deletion
@@ -130,6 +133,10 @@ public interface Element {
         }
 
 
+        default long getLength(){
+            return getSpan()+1;
+        }
+        long getSpan();
 
         // Deletion
         void delete();
@@ -139,6 +146,10 @@ public interface Element {
         // Naming
         void setName(String name);
         String getName();
+
+
+        Group raiseGroup();
+        Segment combine(Element x);
     }
 
 

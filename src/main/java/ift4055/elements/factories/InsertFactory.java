@@ -5,23 +5,32 @@ import ift4055.elements.Element;
 import ift4055.elements.Element.Segment;
 import ift4055.elements.Factory;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class InsertFactory implements Factory.Insert {
-    private final List<Insert> objects;
+    private Insert[] objects;
+    private int index;
     Bin bin;
 
     public InsertFactory(Bin bin){
-        objects = new ArrayList<>();
+        objects = new Insert[16];
+        index = 0;
         this.bin = bin;
+    }
+
+    private void expandCapacity(){
+        int c = objects.length;
+        c = c%3==0? 3*c/2: 4*c/3;
+        Insert[] newObjects = new Insert[c];
+        for (int i = 0; i < objects.length; i++)
+            newObjects[i] = objects[i];
+
+        this.objects = newObjects;
     }
 
     public Insert newInsert(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset) {
         Segment parent = Bin.ref(bin);
         Insert insert = new Insert(strand, rMin, span, wMin);
-        // Add children
-        objects.add(insert);
+        insert.populateInsert(dnaSequence, offset);
+        objects[index] = insert;
         return insert;
     }
 
@@ -31,17 +40,25 @@ public class InsertFactory implements Factory.Insert {
         private final int wMin;
         private final int span;
         private Segment parent;
-        private Base[] indexRange;
+        private Base[] children;
         private Insert(int strand, int rMin, int span, int wMin){
             this.strand = strand;
             this.rMin = rMin;
             this.span = span;
             this.wMin = wMin;
             parent = Bin.ref(bin);
+            children = new Base[span];
+        }
+
+        private void populateInsert(byte[] dnaSequence, int offset){
+            BaseFactory baseFactory = bin.baseFactory;
+            for (int i = 0; i < span; i++) {
+                children[i] = baseFactory.addBase(dnaSequence[i+offset]);
+            }
         }
 
         public Bin getBin(){
-            throw new UnsupportedOperationException();
+            return bin;
         }
 
         public Element getParent(){
@@ -54,29 +71,29 @@ public class InsertFactory implements Factory.Insert {
             return getChild(0);
         }
         public Element getChild(int index){
-            return indexRange[index];
+            return children[index];
         }
 
 
         // Genome coordinates
 
-        public int getWMin() {
+        public long getWMin() {
             return wMin;
         }
 
 
-        public int getWMax() {
-            return wMin + span;
+        public long getWMax() {
+            return wMin + getLength();
         }
 
 
-        public int getRMin() {
+        public long getRMin() {
             return rMin;
         }
 
 
-        public int getRMax() {
-            return rMin + span*strand;
+        public long getRMax() {
+            return rMin + span*getLength();
         }
 
 
@@ -84,7 +101,7 @@ public class InsertFactory implements Factory.Insert {
 
         // DNA sequences
         public Base getNucleotideAt(int index){
-            return indexRange[index];
+            return children[index];
         }
 
 
@@ -95,13 +112,10 @@ public class InsertFactory implements Factory.Insert {
 
         // Children and descendants in the element tree
         public Element[] getMembers(){
-            return indexRange;
+            return children;
         }
 
-        public int getLength(){
-            return span+1;
-        }
-        public int getSpan(){
+        public long getSpan(){
             return span;
         }
 

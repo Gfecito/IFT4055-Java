@@ -8,7 +8,7 @@ public interface Factory {
         Element.Segment newSegment();
     }
     interface Match{
-        Element.Match newMatch(int strand, int rMin, int span, int wMin, byte[] dnaSequence);
+        Element.Match newMatch(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset);
     }
     interface Syndrome{
         Element.Syndrome newSyndrome(int syndrome, int readPosition);

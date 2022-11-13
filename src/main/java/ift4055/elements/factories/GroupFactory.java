@@ -4,20 +4,32 @@ import ift4055.binning.Bin;
 import ift4055.elements.Element;
 import ift4055.elements.Factory;
 
-import java.util.ArrayList;
-import java.util.List;
 
 public class GroupFactory implements Factory.Group {
-    List<Group> objects;
+    private Group[] objects;
+    private int index;
     Bin bin;
 
     public GroupFactory(Bin bin){
-        objects = new ArrayList<>();
+        objects = new Group[16];
+        index = 0;
         this.bin = bin;
     }
+
+    private void expandCapacity(){
+        int c = objects.length;
+        c = c%3==0? 3*c/2: 4*c/3;
+        Group[] newObjects = new Group[c];
+        for (int i = 0; i < objects.length; i++)
+            newObjects[i] = objects[i];
+
+        this.objects = newObjects;
+    }
+
     public Group newGroup(int nMembers){
         Group group = new Group(nMembers);
-        objects.add(group);
+        objects[index] = group;
+        index++;
         return group;
     }
     public class Group implements Element.Group{
@@ -25,6 +37,8 @@ public class GroupFactory implements Factory.Group {
         String name;
         private Group(int nMembers){
             members = new Segment[nMembers];
+            for(int i=0; i<nMembers; i++)
+                members[i]=null;
         }
 
         public Bin getBin(){
@@ -36,19 +50,51 @@ public class GroupFactory implements Factory.Group {
 
         // Genome coordinates
         // Iterate through segment children and get mins and maxes.
-        public int getWMin(){
-            throw new UnsupportedOperationException();
+        public long getWMin(){
+            long min = members[0].getWMin();
+            for (Segment member :
+                    members) {
+                long val = member.getWMin();
+                if(val<min) min = val;
+            }
+            return min;
         }
-        public int getWMax(){
-            throw new UnsupportedOperationException();
+        public long getWMax(){
+            long max = members[0].getWMax();
+            for (Segment member :
+                    members) {
+                long val = member.getWMax();
+                if(val<max) max = val;
+            }
+            return max;
         }
-        public int getRMin(){
-            throw new UnsupportedOperationException();
+        public long getRMin(){
+            long min = members[0].getRMin();
+            for (Segment member :
+                    members) {
+                long val = member.getRMin();
+                if(val<min) min = val;
+            }
+            return min;
         }
-        public int getRMax(){
-            throw new UnsupportedOperationException();
+        public long getRMax(){
+            long max = members[0].getRMax();
+            for (Segment member :
+                    members) {
+                long val = member.getRMax();
+                if(val<max) max = val;
+            }
+            return max;
         }
 
+        public long getSpan() {
+            long sum = members[0].getSpan();
+            for (Segment member :
+                    members) {
+                sum += member.getSpan();
+            }
+            return sum;
+        }
 
         public Base getNucleotideAt(int index) {
             return null;

@@ -17,8 +17,9 @@ public class Scheme {
     // Root, gotta get the length of the DNA sequence.
     public Scheme(int alpha, int beta){
         bins = new Bin[5][];
-        for (int i = 0; i < 5; i++) {
-            bins[i] = new Bin[]
+        for (int h = 0; h < 5; h++) {
+            int width = (int) Math.pow(2,alpha*h+beta);
+            bins[h] = new Bin[width];
         }
         this.alpha = alpha;
         this.beta = beta;

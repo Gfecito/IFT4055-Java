@@ -27,10 +27,12 @@ public class InsertFactory implements Factory.Insert {
     }
 
     public Insert newInsert(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset) {
-        Segment parent = Bin.ref(bin);
         Insert insert = new Insert(strand, rMin, span, wMin);
         insert.populateInsert(dnaSequence, offset);
+
+        if(index >= objects.length) expandCapacity();
         objects[index] = insert;
+        index++;
         return insert;
     }
 
@@ -51,9 +53,8 @@ public class InsertFactory implements Factory.Insert {
         }
 
         private void populateInsert(byte[] dnaSequence, int offset){
-            BaseFactory baseFactory = bin.baseFactory;
             for (int i = 0; i < span; i++) {
-                children[i] = baseFactory.addBase(dnaSequence[i+offset]);
+                children[i] = bin.addBase(dnaSequence[i+offset]);
             }
         }
 

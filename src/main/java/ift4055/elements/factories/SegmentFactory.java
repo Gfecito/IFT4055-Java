@@ -10,7 +10,7 @@ public class SegmentFactory implements Factory.Segment {
     private Segment sentinel;
     Bin bin;
 
-    SegmentFactory(Bin b)
+    public SegmentFactory(Bin b)
     {
         objects = new Segment[16];
         this.bin = b;
@@ -24,7 +24,7 @@ public class SegmentFactory implements Factory.Segment {
             else s.child = objects[i-1];              // Next in circular list.
             objects[i] = s;
         }
-        sentinel.child = objects[-1];                       // Start of circular list.
+        sentinel.child = objects[objects.length-1];                       // Start of circular list.
 
         objects[0] = sentinel;
     }
@@ -151,19 +151,20 @@ public class SegmentFactory implements Factory.Segment {
         // Update element tree, and return a segment containing x and members of s.
         public Segment combine(Element x){
             Segment s = this;
+            Bin sBin = s.getBin(); Bin xBin = x.getBin();
             Bin bin = Bin.lowestCommonAncestor(s.getBin(),x.getBin());
             Segment v;
             // Is x a segment, or a match/insert?
             if(x.getRank()==3) v = (Segment) x;
-            else {v=bin.segmentFactory.newSegment();v.setChild(x);x.setParent(v);}
+            else {v=bin.newSegment();v.setChild(x);x.setParent(v);}
 
             // Insertion at head
             if(bin==s.getBin()){Element temp=s.getChild();s.setChild(v);v.setParent(temp); return s;}
 
             // New container in B
             Segment u,w;
-            u = bin.segmentFactory.newSegment(); v.setParent(u);
-            w = bin.segmentFactory.newSegment();
+            u = bin.newSegment(); v.setParent(u);
+            w = bin.newSegment();
             w.setChild(s); u.setParent(s.getParent()); u.setChild(w); w.setParent(v);
             Bin uBin, uPBin;
             uBin = u.getBin();
@@ -182,7 +183,7 @@ public class SegmentFactory implements Factory.Segment {
             if(bin==v.getBin()) return (Group) v;
 
             m = u.getMembers().length;
-            w = bin.groupFactory.newGroup(m);
+            w = bin.newGroup(m);
             for (int i = 0; i < m; i++) {
                 w.setChild(i,u.getChild(i));
                 u.getChild(i).setParent(w);

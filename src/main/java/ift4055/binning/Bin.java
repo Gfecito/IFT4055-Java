@@ -27,12 +27,31 @@ public class Bin {
     /**
      * Factories
      */
-    public BaseFactory baseFactory;
-    public SyndromeFactory syndromeFactory;
-    public InsertFactory insertFactory;
-    public MatchFactory matchFactory;
-    public SegmentFactory segmentFactory;
-    public GroupFactory groupFactory;
+    private BaseFactory baseFactory = new BaseFactory(this);
+    private SyndromeFactory syndromeFactory = new SyndromeFactory(this);
+    private InsertFactory insertFactory = new InsertFactory(this);
+    private MatchFactory matchFactory = new MatchFactory(this);
+    private SegmentFactory segmentFactory = new SegmentFactory(this);
+    private GroupFactory groupFactory = new GroupFactory(this);
+
+    public Base addBase(int b){
+        return baseFactory.addBase(b);
+    }
+    public Syndrome newSyndrome(int syndrome, int readPosition){
+        return syndromeFactory.newSyndrome(syndrome, readPosition);
+    }
+    public Insert newInsert(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset){
+        return insertFactory.newInsert(strand, rMin, span, wMin, dnaSequence, offset);
+    }
+    public Match newMatch(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset){
+        return matchFactory.newMatch(strand, rMin, span, wMin, dnaSequence, offset);
+    }
+    public Segment newSegment(){
+        return segmentFactory.newSegment();
+    }
+    public Group newGroup(int nMembers){
+        return groupFactory.newGroup(nMembers);
+    }
 
 
 

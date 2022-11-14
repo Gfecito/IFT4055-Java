@@ -14,19 +14,26 @@ import java.util.List;
 
 public class Parser {
     Scheme scheme;
+    File sam;
+    File fasta;
 
-    public Scheme populateBinningScheme(File alignmentMap, File fasta, int start, int stop) throws IOException {
-        final Scheme scheme = new Scheme();
+    public Parser(File sam, File fasta){
+        this.sam = sam;
+        this.fasta = fasta;
+
+        this.scheme = new Scheme(2,10);
+    }
+
+    public Scheme populateBinningScheme() throws IOException {
         // There's obviously a problem here: schemes have 1 segment each, yet I place every segment in the same
         // scheme presently. Gotta fix. Not sure how. TODO.
         final Group referenceGenome = storeReferenceGenome(fasta, scheme);
-        final Group pairedReads = storePairedReads(alignmentMap, start, stop, scheme);
+        final Group pairedReads = storePairedReads(sam, scheme);
 
-        this.scheme = scheme;
         return scheme;
     }
 
-    public Group storeReferenceGenome(File fasta, Scheme scheme) {
+    private Group storeReferenceGenome(File fasta, Scheme scheme) {
         final FastaSequenceFile reader = new FastaSequenceFile(fasta, true);
         Bin root = new Bin(0, 0, scheme);
         LinkedList<Segment> groupChildren = new LinkedList<>();
@@ -35,7 +42,7 @@ public class Parser {
         int readPointer = 0;
         ReferenceSequence chromosome = reader.nextSequence();
         while (chromosome != null) {
-            Segment chainParent = root.segmentFactory.newSegment();
+            Segment chainParent = root.newSegment();
 
             String name = chromosome.getName();
             String[] splitted = split(chromosome.toString());
@@ -45,7 +52,7 @@ public class Parser {
             // For each non-ambiguous stretch in the contig, make an insert.
             for (int i = 0; i < splitted.length; i++) {
                 String sequence = splitted[i];
-                Segment segment = root.segmentFactory.newSegment();
+                Segment segment = root.newSegment();
 
                 byte[] bases = toBases(sequence);
                 int length = sequence.length();
@@ -54,7 +61,7 @@ public class Parser {
                 int rMin = readPointer;
                 int wMin = readPointer;
                 int offset = 0;
-                Insert insert = root.insertFactory.newInsert(strand, rMin, span, wMin, bases, offset);
+                Insert insert = root.newInsert(strand, rMin, span, wMin, bases, offset);
 
                 readPointer += length;
                 segment.combine(insert);
@@ -69,12 +76,13 @@ public class Parser {
 
             groupChildren.add(chainParent);
             scheme.addNamedElement(name, chainParent);
+            chromosome = reader.nextSequence();
         }
         // Finished reading.
         reader.close();
 
         // Put all the children in group.
-        Group group = root.groupFactory.newGroup(groupChildren.size());
+        Group group = root.newGroup(groupChildren.size());
         int i = 0;
         for (Segment s : groupChildren) {
             group.setChild(i, s);
@@ -86,10 +94,11 @@ public class Parser {
         return group;
     }
 
-    public Group storePairedReads(File sam, int start, int stop, Scheme referenceScheme) throws IOException {
+    private Group storePairedReads(File sam, Scheme referenceScheme) throws IOException {
         final SamReader samReader = SamReaderFactory.makeDefault().open(sam);
 
-        SAMRecordIterator iterator = samReader.queryOverlapping(sam.getName(), start, stop);
+        // From beginning to end.
+        SAMRecordIterator iterator = samReader.queryOverlapping(sam.getName(), 0, 0);
         while (iterator.hasNext()) {
             SAMRecord alignment = iterator.next();
             // "All mapped segments in alignment lines are represented on the forward genomic strand"
@@ -119,7 +128,7 @@ public class Parser {
             name = sam.getName();
             Group u = (Group) referenceScheme.getNamedElement(name);
             if (u == null) {
-                u = B.groupFactory.newGroup(2);
+                u = B.newGroup(2);
                 u.setName(name);
             }
 
@@ -136,7 +145,7 @@ public class Parser {
             Check the strand from FLAGS.
             Then process the CIGAR operations while keeping track of reading and writing positions.
              */
-            Segment y = B.segmentFactory.newSegment();
+            Segment y = B.newSegment();
             // and add its Match and Insert children z as y ← combine(y, z) by parsing
             // the alignment in read position order
             int flags = alignment.getFlags();
@@ -158,7 +167,7 @@ public class Parser {
                 span = e.getLength() - 1;
                 offset += span + 1;
 
-                bin.insertFactory.newInsert(strand, rMin, span, wMin, sequence, offset);
+                bin.newInsert(strand, rMin, span, wMin, sequence, offset);
             }
             // Store the rest, only insert and matches for now.
             for (CigarElement e : cigarElements) {
@@ -167,7 +176,7 @@ public class Parser {
                     span = e.getLength() - 1;
                     offset += span + 1;
 
-                    bin.insertFactory.newInsert(strand, rMin, span, wMin, sequence, offset);
+                    bin.newInsert(strand, rMin, span, wMin, sequence, offset);
                 } else if (e.getOperator().equals(match)) {
                     rMin = wMin = offset;
                     span = e.getLength() - 1;
@@ -175,7 +184,7 @@ public class Parser {
 
                     bin = scheme.binByInterval(rMin, rMin + offset);
 
-                    bin.matchFactory.newMatch(strand, rMin, span, wMin, sequence, offset);
+                    bin.newMatch(strand, rMin, span, wMin, sequence, offset);
                 }
             }
 

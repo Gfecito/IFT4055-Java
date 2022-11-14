@@ -28,6 +28,8 @@ public class GroupFactory implements Factory.Group {
 
     public Group newGroup(int nMembers){
         Group group = new Group(nMembers);
+
+        if(index >= objects.length) expandCapacity();
         objects[index] = group;
         index++;
         return group;

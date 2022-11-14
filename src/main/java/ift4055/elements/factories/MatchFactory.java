@@ -28,8 +28,9 @@ public class MatchFactory implements Factory.Match{
 
     public Match newMatch(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset) {
         Segment parent = Bin.ref(bin);
-        Match match = new Match(strand, rMin, span, wMin, parent);
+        Match match = new Match(strand, rMin, span, wMin);
         // Add children
+        if(index >= objects.length) expandCapacity();
         objects[index] = match;
         index++;
         return match;
@@ -43,12 +44,11 @@ public class MatchFactory implements Factory.Match{
         private final int span;
         private final int wMin;
         private Syndrome[] children;
-        private Match(int strand, int rMin, int span, int wMin, Segment parent){
+        private Match(int strand, int rMin, int span, int wMin){
             this.strand = strand;
             this.rMin = rMin;
             this.span = span;
             this.wMin = wMin;
-            this.parent = parent;
         }
 
         public Bin getBin(){

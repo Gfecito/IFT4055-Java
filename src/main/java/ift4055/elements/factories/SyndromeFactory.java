@@ -10,7 +10,7 @@ public class SyndromeFactory implements Factory.Syndrome {
     Match parent;
     int[] objects;
     int length;
-    public SyndromeFactory(Bin bin, Match parent){
+    public SyndromeFactory(Bin bin){
         this.bin = bin;
         this.parent = parent;
         objects = new int[16];
@@ -28,11 +28,12 @@ public class SyndromeFactory implements Factory.Syndrome {
     }
 
     public Syndrome newSyndrome(int syndrome, int readPosition) {
-        int index = this.length;        // Add at the end
+        if(length>= objects.length) expandCapacity();
+        int index = length;        // Add at the end
         int val = syndrome;             // Save in 2 smallest bits
         val += readPosition*4;          // Save in 30 biggest bits
-        this.objects[index] = val;
-        this.length++;
+        objects[index] = val;
+        length++;
         return new Syndrome(syndrome, readPosition);
     }
 

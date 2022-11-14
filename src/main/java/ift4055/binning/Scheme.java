@@ -14,12 +14,20 @@ public class Scheme {
     private int alpha;
     private int beta;
 
-    // Root
-    public Scheme(){
+    // Root, gotta get the length of the DNA sequence.
+    public Scheme(int alpha, int beta){
+        bins = new Bin[5][];
+        for (int i = 0; i < 5; i++) {
+            bins[i] = new Bin[]
+        }
+        this.alpha = alpha;
+        this.beta = beta;
         segment = null;
         maximumHeight = 0;
     }
-    public Scheme(Segment segment){
+    public Scheme(Segment segment, int alpha, int beta){
+        this.alpha = alpha;
+        this.beta = beta;
         l = segment.getLength();
         this.segment = segment;
     }
@@ -34,7 +42,10 @@ public class Scheme {
     /* PRINCIPAL OPERATIONS */
     // Find bin by height and offset
     public Bin findBin(int height, int offset){
-        return bins[height][offset];
+        Bin bin = bins[height][offset];
+        if(bin==null) bin = new Bin(height,offset,this);
+        bins[height][offset] = bin;
+        return bin;
     }
 
     public int getAlpha() {

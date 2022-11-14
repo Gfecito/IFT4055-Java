@@ -8,14 +8,11 @@ import ift4055.elements.Factory;
 public class BaseFactory implements Factory.Base {
     private int[] bases;   // Little endian encoding
     private int nBases;
-    private Insert parent;
     private Bin bin;
 
-    public BaseFactory(Bin bin, Insert parent){
-        long nBasesTotal = parent.getSpan();
+    public BaseFactory(Bin bin){
         bases = new int[16];
         this.bin = bin;
-        this.parent = parent;
     }
 
     private void expandCapacity(){
@@ -29,15 +26,16 @@ public class BaseFactory implements Factory.Base {
     }
 
     public Base addBase(int b){
-        int index = this.nBases;
+        if(nBases >= bases.length/16) expandCapacity();
+        int index = nBases;
         int B = 16;                     // 32 bits in int => 2 bits per base => 16 bases per int.
         int containerIndex =index/B;    // In which int?
         int containerAdress=index%B;    // Which bits in the int?
-        int container = this.bases[containerIndex];
+        int container = bases[containerIndex];
         container += (b>>>(2*containerAdress));       // Save new base in this integer.
 
-        this.bases[containerIndex] = container;
-        this.nBases++;
+        bases[containerIndex] = container;
+        nBases++;
         return new Base(b);
     }
 
@@ -60,9 +58,6 @@ public class BaseFactory implements Factory.Base {
 
         public Bin getBin() {
             return bin;
-        }
-        public Element getParent(int index) {
-            return parent;
         }
 
         public long getWMin() {

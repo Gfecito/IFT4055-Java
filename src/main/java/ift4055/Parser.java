@@ -5,7 +5,7 @@ import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import ift4055.binning.Scheme;
 import ift4055.binning.Bin;
-import ift4055.elements.Element.*;
+import ift4055.binning.elements.Element.*;
 
 import java.io.File;
 import java.io.IOException;

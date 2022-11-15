@@ -1,9 +1,8 @@
-package ift4055.elements.factories;
+package ift4055.binning.elements.factories;
 
 import ift4055.binning.Bin;
-import ift4055.elements.Element;
-import ift4055.elements.Element.Segment;
-import ift4055.elements.Factory;
+import ift4055.binning.elements.Element;
+import ift4055.binning.elements.Factory;
 
 public class InsertFactory implements Factory.Insert {
     private Insert[] objects;

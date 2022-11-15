@@ -1,6 +1,7 @@
-package ift4055.elements;
+package ift4055.binning.elements;
 
 import ift4055.binning.Bin;
+import ift4055.binning.Scheme;
 
 public interface Element {
     Bin getBin();
@@ -103,6 +104,7 @@ public interface Element {
         }
 
         // Parents and ancestors in the element tree.
+        Scheme getScheme();
         void setParent(Element E);
         default Element getContainer(){
             Element up = getParent();

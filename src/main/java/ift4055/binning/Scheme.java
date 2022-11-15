@@ -1,7 +1,7 @@
 package ift4055.binning;
 
-import ift4055.elements.Element;
-import ift4055.elements.Element.Segment;
+import ift4055.binning.elements.Element;
+import ift4055.binning.elements.Element.Segment;
 
 import java.util.HashMap;
 
@@ -66,7 +66,7 @@ public class Scheme {
         return Math.pow(2,(height*this.alpha+this.beta));
     }
     // Find and automatically instantiate bin by interval
-    public Bin binByInterval(int start, int end){
+    public Bin coveringBin(int start, int end){
         int a=this.alpha;
         int b=this.beta;
 

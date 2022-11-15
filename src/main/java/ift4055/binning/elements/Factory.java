@@ -1,4 +1,6 @@
-package ift4055.elements;
+package ift4055.binning.elements;
+
+import ift4055.assemblyGraph.Graph;
 
 public interface Factory {
     interface Group{
@@ -18,5 +20,17 @@ public interface Factory {
     }
     interface Base{
         Element.Base addBase(int b);
+    }
+
+
+    /* GRAPH */
+    interface Edge{
+        Graph.Edge newEdge(int i, int sigma);
+    }
+    interface Node{
+        Graph.Node newNode();
+    }
+    interface Connector{
+        Graph.Connector newConnector();
     }
 }

@@ -1,8 +1,9 @@
-package ift4055.elements.factories;
+package ift4055.binning.elements.factories;
 
 import ift4055.binning.Bin;
-import ift4055.elements.Element;
-import ift4055.elements.Factory;
+import ift4055.binning.Scheme;
+import ift4055.binning.elements.Factory;
+import ift4055.binning.elements.Element;
 
 
 public class SegmentFactory implements Factory.Segment {
@@ -75,8 +76,12 @@ public class SegmentFactory implements Factory.Segment {
         private Element parent;
         private Element child;
         private String name;
+        private Scheme scheme;
 
 
+        public Scheme getScheme(){
+            return scheme;
+        }
 
         public Bin getBin() {
             return bin;
@@ -133,7 +138,8 @@ public class SegmentFactory implements Factory.Segment {
 
         public void delete() {
             parent = null;
-            child = null;
+            child = sentinel.child;
+            sentinel.child = this;
         }
 
 

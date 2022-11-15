@@ -1,8 +1,9 @@
 package ift4055.binning;
 
-import ift4055.elements.Element;
-import ift4055.elements.Element.*;
-import ift4055.elements.factories.*;
+import ift4055.assemblyGraph.Graph.*;
+import ift4055.binning.elements.Element;
+import ift4055.binning.elements.Element.*;
+import ift4055.binning.elements.factories.*;
 
 import java.util.HashSet;
 
@@ -33,6 +34,10 @@ public class Bin {
     private MatchFactory matchFactory = new MatchFactory(this);
     private SegmentFactory segmentFactory = new SegmentFactory(this);
     private GroupFactory groupFactory = new GroupFactory(this);
+    private ConnectorFactory connectorFactory = new ConnectorFactory(this);
+    private EdgeFactory edgeFactory = new EdgeFactory(this);
+    private NodeFactory nodeFactory = new NodeFactory(this);
+
 
     public Base addBase(int b){
         return baseFactory.addBase(b);
@@ -52,6 +57,17 @@ public class Bin {
     public Group newGroup(int nMembers){
         return groupFactory.newGroup(nMembers);
     }
+
+    public Connector newConnector(){
+        return connectorFactory.newConnector();
+    }
+    public Edge newEdge(int start, int span){
+        return edgeFactory.newEdge(start, span);
+    }
+    public Node newNode(){
+        return nodeFactory.newNode();
+    }
+
 
 
 

@@ -43,7 +43,7 @@ public class SegmentFactory implements Factory.Segment {
             else s.child = newObjects[i-1];               // Next in circular list.
             newObjects[i] = s;
         }
-        sentinel.child = newObjects[-1];                        // Start of circular list.
+        sentinel.child = newObjects[c-1];                        // Start of circular list.
 
         this.objects = newObjects;
     }
@@ -81,6 +81,9 @@ public class SegmentFactory implements Factory.Segment {
 
         public Scheme getScheme(){
             return scheme;
+        }
+        public void setScheme(Scheme scheme){
+            this.scheme = scheme;
         }
 
         public Bin getBin() {

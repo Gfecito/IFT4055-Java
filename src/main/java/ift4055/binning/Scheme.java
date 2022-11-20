@@ -11,26 +11,29 @@ public class Scheme {
     private int maximumHeight;
     private Bin[][] bins;
     private HashMap<String, Element>  lookupTable = new HashMap<>();
-    private int alpha;
-    private int beta;
+    private int alpha = 4;
+    private int beta = 0;
 
-    // Root, gotta get the length of the DNA sequence.
-    public Scheme(int alpha, int beta){
-        bins = new Bin[5][];
-        for (int h = 0; h < 5; h++) {
-            int width = (int) Math.pow(2,alpha*h+beta);
-            bins[h] = new Bin[width];
-        }
-        this.alpha = alpha;
-        this.beta = beta;
+    // Root scheme.
+    // Everything else will be an indirect child
+    public Scheme(){
+        bins = new Bin[1][1];
+        bins[0][0] = new Bin(0,0,this);
         segment = null;
         maximumHeight = 0;
     }
-    public Scheme(Segment segment, int alpha, int beta){
-        this.alpha = alpha;
-        this.beta = beta;
-        l = segment.getLength();
+    public Scheme(Segment segment, int length){
+        l = length;
         this.segment = segment;
+
+        int height, width;
+        height = maxHeight();
+        bins = new Bin[height][];
+        for (int i = 0; i < height; i++) {
+            width = (int) maxOffset(i);
+            bins[i] = new Bin[width];
+            for (int j = 0; j < width; j++) bins[i][j] = new Bin(i,j,this);
+        }
     }
 
     public void addNamedElement(String name, Element e){
@@ -58,25 +61,33 @@ public class Scheme {
     }
 
     // Get max height
-    public int maxHeight(){
-        return -1;
+    public int maxHeight(){     // Max of scheme
+        int start = 0;
+        int end = (int) l;
+        return maxHeight(start, end);
     }
-    // Get max offset from height
-    public double maxOffset(int height){
-        return Math.pow(2,(height*this.alpha+this.beta));
-    }
-    // Find and automatically instantiate bin by interval
-    public Bin coveringBin(int start, int end){
-        int a=this.alpha;
-        int b=this.beta;
+    public int maxHeight(int start, int end){     // Max for section
+        int a=alpha;
+        int b=beta;
 
         long z = (start^end)>>>b;
         int lg = 64-Long.numberOfLeadingZeros(z);   // bit-length for z in binary representation
         int height = (lg+a-1)/a;                    // integer division with rounding up
-        int offset = start >>> (a*height+b);        // bin offset
-        Bin bin = new Bin(height, offset, this);
-        bins[height][offset] = bin;
-        return bin;
+        return height;
+    }
+    // Get max offset from height
+    public double maxOffset(int height){
+        return Math.pow(2,(height*alpha+beta));
+    }
+    // Find and automatically instantiate bin by interval
+    public Bin coveringBin(int start, int end){
+        int height = maxHeight(start, end);
+        int offset = start >>> (alpha*height+beta);      // bin offset
+
+        // If not there yet, instantiate on the go.
+        if(bins[height][offset]==null) bins[height][offset] = new Bin(height, offset, this);
+
+        return bins[height][offset];
     }
     // Defining element
     public Segment getSegment(){

@@ -105,6 +105,7 @@ public interface Element {
 
         // Parents and ancestors in the element tree.
         Scheme getScheme();
+        void setScheme(Scheme s);
         void setParent(Element E);
         default Element getContainer(){
             Element up = getParent();

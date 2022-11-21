@@ -5,18 +5,12 @@ import ift4055.binning.elements.Element;
 import ift4055.binning.elements.Element.*;
 import ift4055.binning.elements.factories.*;
 
-import java.util.HashSet;
-
 public class Bin {
     // These attributes need a revision. TODO
     private final int offset;
     private final int height;
     private final int index;
     private final Scheme container;
-    // Do these matter?
-    private String annotatedGenomicPosition;
-    private int[][] intervals;
-    private HashSet<int[]>[] intervalSets;
 
 
     public Bin(int height, int offset, Scheme scheme){
@@ -79,6 +73,13 @@ public class Bin {
 
 
 
+    // Get nucleotides
+    public Syndrome[] getSyndromes(){
+        return syndromeFactory.getSyndromes();
+    }
+    public Base[] getBases(){
+        return baseFactory.getBases();
+    }
 
     /**
      * Find the closest common ancestor
@@ -100,7 +101,7 @@ public class Bin {
         return parent.getBin();
     }
     public static Bin lowestCommonAncestor(Bin a, Bin b){
-        int alpha, beta, j, k, d, h, z, g, e, i;
+        int alpha, j, k, d, h, z, g, e, i;
         while(idepth(a)>idepth(b)) a = bin(ref(a));
         while(idepth(a)<idepth(b)) b = bin(ref(b));
         while(ref(a)!=ref(b)) {a = bin(ref(a)); b = bin(ref(b));}

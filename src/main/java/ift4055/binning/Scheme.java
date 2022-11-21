@@ -7,12 +7,12 @@ import java.util.HashMap;
 
 public class Scheme {
     private long l;
-    private Segment segment;
-    private int maximumHeight;
-    private Bin[][] bins;
-    private HashMap<String, Element>  lookupTable = new HashMap<>();
-    private int alpha = 2;
-    private int beta = 0;
+    private final Segment segment;
+    private final int maximumHeight;
+    private final Bin[][] bins;
+    private final HashMap<String, Element>  lookupTable;
+    private final int alpha = 2;
+    private final int beta = 0;
 
     // Root scheme.
     // Everything else will be an indirect child
@@ -21,8 +21,10 @@ public class Scheme {
         bins[0][0] = new Bin(0,0,this);
         segment = null;
         maximumHeight = 0;
+        lookupTable = new HashMap<>();
     }
     public Scheme(Segment segment, int length){
+        lookupTable=null;
         l = length;
         this.segment = segment;
 
@@ -34,7 +36,6 @@ public class Scheme {
             int depth = height - i;
             width = maxOffset(i);
             bins[i] = new Bin[width];
-            for (int j = 0; j < width; j++) bins[i][j] = new Bin(height-i,j,this);
         }
     }
 
@@ -77,12 +78,10 @@ public class Scheme {
     }
     public int coveringHeight(int start, int end){     // Max for section
         int a=alpha;
-        int b=beta;
 
-        long z = (start^end)>>>b;
+        long z = (start^end)>>>beta;
         int lg = 64-Long.numberOfLeadingZeros(z);   // bit-length for z in binary representation
-        int height = (lg+a-1)/a;                    // integer division with rounding up
-        return height;
+        return (lg+a-1)/a;                    // integer division with rounding up
     }
     // Get max offset from height
     public int maxOffset(int height){
@@ -125,7 +124,7 @@ public class Scheme {
         int twoToAlphaD = twoToAlpha << d;
         k =  j - (twoToAlphaD-1)/(twoToAlpha-1);
 
-        return new int[]{ (int) d, (int) k};
+        return new int[]{d, k};
     }
     public int depth2idx(int depth, int offset){
         return (1<<(alpha*depth)-1)/(1<<alpha-1)+offset;

@@ -2,7 +2,7 @@ package ift4055.binning.elements.factories;
 
 import ift4055.binning.Bin;
 import ift4055.binning.elements.Element;
-import ift4055.binning.elements.Element.Segment;
+import ift4055.binning.elements.Element.*;
 import ift4055.binning.elements.Factory;
 
 public class MatchFactory implements Factory.Match{
@@ -20,16 +20,18 @@ public class MatchFactory implements Factory.Match{
         int c = objects.length;
         c = c%3==0? 3*c/2: 4*c/3;
         Match[] newObjects = new Match[c];
-        for (int i = 0; i < objects.length; i++)
-            newObjects[i] = objects[i];
+        System.arraycopy(objects, 0, newObjects, 0, objects.length);
 
         this.objects = newObjects;
     }
 
     public Match newMatch(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset) {
         Segment parent = Bin.ref(bin);
-        Match match = new Match(strand, rMin, span, wMin);
         // Add children
+        for (int i = 0; i < span; i++)
+            bin.newSyndrome(dnaSequence[i+offset], rMin+i);
+
+        Match match = new Match(strand, rMin, span, wMin, parent);
         if(index >= objects.length) expandCapacity();
         objects[index] = match;
         index++;
@@ -43,12 +45,12 @@ public class MatchFactory implements Factory.Match{
         private final int rMin;
         private final int span;
         private final int wMin;
-        private Syndrome[] children;
-        private Match(int strand, int rMin, int span, int wMin){
+        private Match(int strand, int rMin, int span, int wMin, Segment parent){
             this.strand = strand;
             this.rMin = rMin;
             this.span = span;
             this.wMin = wMin;
+            this.parent = parent;
         }
 
         public Bin getBin(){
@@ -59,10 +61,14 @@ public class MatchFactory implements Factory.Match{
             return parent;
         }
         public Element getChild(int index){
-            return children[index];
+            return getMembers()[index];
         }
 
         public Element[] getMembers() {
+            Syndrome[] binSyndromes = bin.getSyndromes();
+            Syndrome[] children = new Syndrome[span];
+            System.arraycopy(binSyndromes, rMin, children, 0, span);
+
             return children;
         }
 

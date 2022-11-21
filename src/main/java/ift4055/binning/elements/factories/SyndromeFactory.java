@@ -3,16 +3,13 @@ package ift4055.binning.elements.factories;
 import ift4055.binning.Bin;
 import ift4055.binning.elements.Factory;
 import ift4055.binning.elements.Element;
-import ift4055.binning.elements.Element.Match;
 
 public class SyndromeFactory implements Factory.Syndrome {
     Bin bin;
-    Match parent;
     int[] objects;
     int length;
     public SyndromeFactory(Bin bin){
         this.bin = bin;
-        this.parent = parent;
         objects = new int[16];
         this.length = 0;
     }
@@ -21,8 +18,7 @@ public class SyndromeFactory implements Factory.Syndrome {
         int c = objects.length;
         c = c%3==0? 3*c/2: 4*c/3;
         int[] newObjects = new int[c];
-        for (int i = 0; i < objects.length; i++)
-            newObjects[i] = objects[i];
+        System.arraycopy(objects, 0, newObjects, 0, objects.length);
 
         this.objects = newObjects;
     }
@@ -35,6 +31,18 @@ public class SyndromeFactory implements Factory.Syndrome {
         objects[index] = val;
         length++;
         return new Syndrome(syndrome, readPosition);
+    }
+
+    public Syndrome[] getSyndromes(){
+        Syndrome[] decodedSyndromes = new Syndrome[length];
+        for (int i = 0; i < length; i++) {
+            int val = objects[i];
+            int readPosition = val>>>2; // Ignore 2 smallest bits; retrieve 30 biggest.
+            int syndrome = val&3;       // Take only 2 smallest bits.
+            Syndrome decodedSyndrome = new Syndrome(syndrome, readPosition);
+            decodedSyndromes[i] = decodedSyndrome;
+        }
+        return decodedSyndromes;
     }
 
     public class Syndrome implements Element.Syndrome{
@@ -51,7 +59,7 @@ public class SyndromeFactory implements Factory.Syndrome {
         }
 
         public Element getParent(int index){
-            return parent;
+            throw new UnsupportedOperationException();
         }
 
         public Element getChild(int index){

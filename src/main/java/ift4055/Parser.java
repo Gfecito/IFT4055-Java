@@ -26,8 +26,6 @@ public class Parser {
     }
 
     public Scheme populateBinningScheme() throws IOException {
-        // There's obviously a problem here: schemes have 1 segment each, yet I place every segment in the same
-        // scheme presently. Gotta fix. Not sure how. TODO.
         final Group referenceGenome = storeReferenceGenome();
         final Group pairedReads = storePairedReads();
 
@@ -58,9 +56,7 @@ public class Parser {
             rootScheme.addNamedElement(name, chainParent);
 
             // For each non-ambiguous stretch in the contig, make an insert.
-            for (int i = 0; i < split.length; i++) {
-                String sequence = split[i];
-
+            for (String sequence : split) {
                 byte[] bases = toBases(sequence);
                 int length = sequence.length();
                 int span = length - 1;
@@ -69,7 +65,7 @@ public class Parser {
                 int wMin = readPointer;
                 int offset = 0;
 
-                Bin chainBin = rootSchemeChild.coveringBin(rMin-segmentStart, rMin+length-segmentStart);
+                Bin chainBin = rootSchemeChild.coveringBin(rMin - segmentStart, rMin + length - segmentStart);
                 // Add insert to bin in scheme of its segment
                 chainBin.newInsert(strand, rMin, span, wMin, bases, offset);
 
@@ -98,10 +94,21 @@ public class Parser {
         System.out.println("Storing Paired Reads from SAM");
 
         // From beginning to end.
-        SAMRecordIterator iterator = samReader.iterator(); //queryOverlapping(sam.getName(), 0, 0);
+        SAMRecordIterator iterator = samReader.iterator();
         while (iterator.hasNext()) {
-            SAMRecord alignment = iterator.next();
-            System.out.println("Processing alignment: "+alignment.getReferenceName()+" ; "+alignment.getReadName()+" for paired reads");
+            SAMRecord alignment;
+
+            try{
+                alignment = iterator.next(); // "MAPQ should be 0 for unmapped read"... skip this alignement
+                if(alignment.getReferenceName().equals("*")){
+                    System.out.println("Reached end of named references. Ending paired read binning");
+                    break;
+                }
+                System.out.println("Processing alignment: "+alignment.getReferenceName()+" ; "+alignment.getReadName()+" for paired reads");
+            } catch(SAMFormatException e){
+                continue;
+            }
+
             // "All mapped segments in alignment lines are represented on the forward genomic strand"
             // -SAM format specification
             int strand = 1;
@@ -166,21 +173,15 @@ public class Parser {
 
             // Store the rest, only insert and matches for now.
             for (CigarElement e : cigarElements) {
+                rMin = wMin = offset;
+                span = e.getLength() - 1;
                 if (e.getOperator().equals(insert)) {
-                    rMin = wMin = offset;
-                    span = e.getLength() - 1;
-                    offset += span;
-
                     bin.newInsert(strand, rMin, span, wMin, sequence, offset);
                 } else if (e.getOperator().equals(match)) {
-                    rMin = wMin = offset;
-                    span = e.getLength() - 1;
-                    offset += span;
-
                     bin = scheme.coveringBin(rMin, rMin + offset);
-
                     bin.newMatch(strand, rMin, span, wMin, sequence, offset);
-                }
+                } else continue;
+                offset += span;
             }
 
 
@@ -190,7 +191,6 @@ public class Parser {
             int i = ((flags&64)==64)? 1: ((flags&128)==128)? 0: -1;     // -1 for neither first nor second.
             u = combine(u,i,y);
         }
-        String name = sam.getName();
         samReader.close();
 
         return u;

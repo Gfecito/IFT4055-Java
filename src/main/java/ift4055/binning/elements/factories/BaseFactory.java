@@ -7,11 +7,12 @@ import ift4055.binning.elements.Element;
 public class BaseFactory implements Factory.Base {
     private int[] bases;   // Little endian encoding
     private int nBases;
-    private Bin bin;
+    private final Bin bin;
 
     public BaseFactory(Bin bin){
         bases = new int[16];
         this.bin = bin;
+        nBases=0;
     }
 
     private void expandCapacity(){
@@ -31,11 +32,26 @@ public class BaseFactory implements Factory.Base {
         int containerIndex =index/B;    // In which int?
         int containerAdress=index%B;    // Which bits in the int?
         int container = bases[containerIndex];
-        container += (b>>>(2*containerAdress));       // Save new base in this integer.
+        container += (b<<(2*containerAdress));       // Save new base in this integer.
 
         bases[containerIndex] = container;
         nBases++;
         return new Base(b);
+    }
+
+    public Base[] getBases(){
+        Base[] decodedBases = new Base[nBases];
+        int i=0;
+        while(i<nBases){
+            int B = 16;                     // 32 bits in int => 2 bits per base => 16 bases per int.
+            int containerIndex =i/B;    // In which int?
+            int containerAdress=i%B;    // Which bits in the int?
+            int container = bases[containerIndex];
+
+            int baseEncoded = container>>>(2*containerAdress)&3;
+            decodedBases[i] = new Base(baseEncoded);
+        }
+        return decodedBases;
     }
 
     public class Base implements Element.Base{
@@ -79,10 +95,9 @@ public class BaseFactory implements Factory.Base {
             return 0;
         }
 
-        // TODO check if this is the proper bit shift.
+        // TODO: was it xor or and??
         public Base syndromize(int syndrome){
             int syndromized = base^syndrome;
-            syndromized = syndromized>>>30; // I only need 2 bits of this
             return new BaseFactory.Base(syndromized);
         }
 

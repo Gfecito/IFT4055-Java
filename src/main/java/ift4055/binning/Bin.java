@@ -28,43 +28,52 @@ public class Bin {
     /**
      * Factories
      */
-    private BaseFactory baseFactory = new BaseFactory(this);
-    private SyndromeFactory syndromeFactory = new SyndromeFactory(this);
-    private InsertFactory insertFactory = new InsertFactory(this);
-    private MatchFactory matchFactory = new MatchFactory(this);
-    private SegmentFactory segmentFactory = new SegmentFactory(this);
-    private GroupFactory groupFactory = new GroupFactory(this);
-    private ConnectorFactory connectorFactory = new ConnectorFactory(this);
-    private EdgeFactory edgeFactory = new EdgeFactory(this);
-    private NodeFactory nodeFactory = new NodeFactory(this);
+    private BaseFactory baseFactory;
+    private SyndromeFactory syndromeFactory;
+    private InsertFactory insertFactory;
+    private MatchFactory matchFactory;
+    private SegmentFactory segmentFactory;
+    private GroupFactory groupFactory;
+    private ConnectorFactory connectorFactory;
+    private EdgeFactory edgeFactory;
+    private NodeFactory nodeFactory;
 
 
     public Base addBase(int b){
+        if(baseFactory==null) baseFactory = new BaseFactory(this);
         return baseFactory.addBase(b);
     }
     public Syndrome newSyndrome(int syndrome, int readPosition){
+        if(syndromeFactory==null) syndromeFactory = new SyndromeFactory(this);
         return syndromeFactory.newSyndrome(syndrome, readPosition);
     }
     public Insert newInsert(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset){
+        if(insertFactory==null) insertFactory = new InsertFactory(this);
         return insertFactory.newInsert(strand, rMin, span, wMin, dnaSequence, offset);
     }
     public Match newMatch(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset){
+        if(matchFactory==null) matchFactory = new MatchFactory(this);
         return matchFactory.newMatch(strand, rMin, span, wMin, dnaSequence, offset);
     }
     public Segment newSegment(){
+        if(segmentFactory==null) segmentFactory = new SegmentFactory(this);
         return segmentFactory.newSegment();
     }
     public Group newGroup(int nMembers){
+        if(groupFactory==null) groupFactory = new GroupFactory(this);
         return groupFactory.newGroup(nMembers);
     }
 
     public Connector newConnector(){
+        if(connectorFactory==null) connectorFactory = new ConnectorFactory(this);
         return connectorFactory.newConnector();
     }
     public Edge newEdge(int start, int span){
+        if(edgeFactory==null) edgeFactory = new EdgeFactory(this);
         return edgeFactory.newEdge(start, span);
     }
     public Node newNode(){
+        if(nodeFactory==null) nodeFactory = new NodeFactory(this);
         return nodeFactory.newNode();
     }
 
@@ -104,14 +113,14 @@ public class Bin {
         // Height difference
         d = a.height - b.height;
         // H is the maximum height
-        if(0<=d) {h = a.height; k = k>>>(d*alpha);}    // Bit shifting wizardry
+        if(d>=0) {h = a.height; k = k>>>(d*alpha);}    // Bit shifting wizardry
         else {h=b.height; j=j>>>(-d*alpha);}
         z = j^k;
         g = 32 - Integer.numberOfLeadingZeros(z);      // Using 32-bit integers
-        e = (g+alpha-1)/alpha;
+        e = (int) (Math.ceil((g+alpha-1.0)/(float) alpha));         // Ceiling with integer division
         i = j>>>(e*alpha);
         h += e;
 
-        return shared.findBin(h,i);
+        return shared.findBin(i);
     }
 }

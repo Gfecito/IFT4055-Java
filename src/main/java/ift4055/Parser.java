@@ -45,11 +45,9 @@ public class Parser {
         System.out.println("Storing reference genome");
         while (chromosome != null) {
             System.out.println("Processing chromosome: "+chromosome.getName()+" of length "+chromosome.length()+" from reference genome");
+            int segmentStart = readPointer;
             String name = chromosome.getName();
-            if(name.equals("assembly_contig_24")){
-                System.out.println("critical point");
-            }
-            String[] splitted = split(chromosome.toString());
+            String[] split = split(chromosome.toString());
 
             Segment chainParent = root.newSegment();
             Scheme rootSchemeChild = new Scheme(chainParent, chromosome.length());
@@ -59,14 +57,9 @@ public class Parser {
             groupChildren.add(chainParent);
             rootScheme.addNamedElement(name, chainParent);
 
-            Segment[] chainSegments = new Segment[splitted.length];
             // For each non-ambiguous stretch in the contig, make an insert.
-            Bin chainBin = rootSchemeChild.findBin(0,0);
-            for (int i = 0; i < splitted.length; i++) {
-                String sequence = splitted[i];
-                Segment segment = chainBin.newSegment();
-                chainParent.setScheme(rootSchemeChild);
-                chainBin = rootSchemeChild.findBin(0,0);
+            for (int i = 0; i < split.length; i++) {
+                String sequence = split[i];
 
                 byte[] bases = toBases(sequence);
                 int length = sequence.length();
@@ -75,35 +68,25 @@ public class Parser {
                 int rMin = readPointer;
                 int wMin = readPointer;
                 int offset = 0;
-                Insert insert = chainBin.newInsert(strand, rMin, span, wMin, bases, offset);
 
-                // Circular chain through parent links.
-                if(i==0){   // Stops at direct child of group
-                    segment.setParent(chainParent);
-                    chainParent.setChild(segment);
-                }
-                else segment.setParent(chainSegments[i - 1]);   // Previous; null child pointers.
+                Bin chainBin = rootSchemeChild.coveringBin(rMin-segmentStart, rMin+length-segmentStart);
+                // Add insert to bin in scheme of its segment
+                chainBin.newInsert(strand, rMin, span, wMin, bases, offset);
 
                 readPointer += length;
-                segment.combine(insert);
-                chainSegments[i] = segment;
             }
 
             chromosome = reader.nextSequence();
         }
         // Finished reading.
         reader.close();
-
-        System.out.println("Closed reader");
         // Put all the children in group.
         Group group = root.newGroup(groupChildren.size());
         int i = 0;
         for (Segment s : groupChildren) {
             group.setChild(i, s); i++;
         }
-        System.out.println("Added group children");
         String name = fasta.getName();
-        System.out.println("Retrieved name");
         group.setName(name);
         rootScheme.addNamedElement(name, group);
         return group;
@@ -112,13 +95,13 @@ public class Parser {
     private Group storePairedReads() throws IOException {
         Group u = null;
         final SamReader samReader = SamReaderFactory.makeDefault().open(sam);
-        System.out.println("Instantiated sam reader");
+        System.out.println("Storing Paired Reads from SAM");
 
         // From beginning to end.
         SAMRecordIterator iterator = samReader.iterator(); //queryOverlapping(sam.getName(), 0, 0);
         while (iterator.hasNext()) {
             SAMRecord alignment = iterator.next();
-            System.out.println("Processing alignment: "+alignment.getReferenceName()+" for paired reads");
+            System.out.println("Processing alignment: "+alignment.getReferenceName()+" ; "+alignment.getReadName()+" for paired reads");
             // "All mapped segments in alignment lines are represented on the forward genomic strand"
             // -SAM format specification
             int strand = 1;
@@ -137,6 +120,8 @@ public class Parser {
 
             int Rmin = alignment.getAlignmentStart() - 1;
             int Rmax = alignment.getAlignmentEnd() - 1;
+            if(Rmin>Rmax)
+                continue;
             Bin B = scheme.coveringBin(Rmin, Rmax);
 
 
@@ -184,13 +169,13 @@ public class Parser {
                 if (e.getOperator().equals(insert)) {
                     rMin = wMin = offset;
                     span = e.getLength() - 1;
-                    offset += span + 1;
+                    offset += span;
 
                     bin.newInsert(strand, rMin, span, wMin, sequence, offset);
                 } else if (e.getOperator().equals(match)) {
                     rMin = wMin = offset;
                     span = e.getLength() - 1;
-                    offset += span + 1;
+                    offset += span;
 
                     bin = scheme.coveringBin(rMin, rMin + offset);
 

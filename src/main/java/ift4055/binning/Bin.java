@@ -18,7 +18,12 @@ public class Bin {
         this.offset = offset;
         this.container = scheme;
         index = scheme.depth2idx(height, offset);
+        if(index<0) throw new RuntimeException("Negative index in bin???");
     }
+    public Scheme getScheme(){
+        return container;
+    }
+
     /**
      * Factories
      */
@@ -79,6 +84,14 @@ public class Bin {
     }
     public Base[] getBases(){
         return baseFactory.getBases();
+    }
+    public Insert[] getInserts(){
+        if(insertFactory==null) return new Insert[0];
+        return insertFactory.getInserts();
+    }
+    public Match[] getMatches(){
+        if(matchFactory==null) return new Match[0];
+        return matchFactory.getMatches();
     }
 
     /**

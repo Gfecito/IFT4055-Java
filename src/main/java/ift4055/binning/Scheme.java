@@ -20,7 +20,7 @@ public class Scheme {
         bins = new Bin[1][1];
         bins[0][0] = new Bin(0,0,this);
         segment = null;
-        maximumHeight = 0;
+        l = maximumHeight = 0;
         lookupTable = new HashMap<>();
     }
     public Scheme(Segment segment, int length){
@@ -102,6 +102,7 @@ public class Scheme {
     public int getIndirectionDepth(){
         if(segment==null) return 0;
         if(segment.getParent().equals(segment)) return 0;
+        if(segment.getParent().getRank()==4) return 1;
         return 1+((Segment) segment.getParent()).getScheme().getIndirectionDepth();
     }
     // Find element
@@ -113,20 +114,32 @@ public class Scheme {
         lookupTable.put(name, element);
     }
 
+    public Bin[][] getBins(){
+        return bins;
+    }
+    public long getLength(){
+        return l;
+    }
+
     // In this context, height is max at group, min at rank1.
     public int[] idx2depth(int j){
         int d,k;
         int twoToAlpha = 1<<alpha;
         //d = (int) (Math.log(1+j*(twoToAlpha-1))/(float)alpha);
-        d = 1;
+        d = 0;
         while((1<<alpha*d)<j) d++;
 
-        int twoToAlphaD = twoToAlpha << d;
+        int twoToAlphaD = d>0? twoToAlpha << d : 1;
         k =  j - (twoToAlphaD-1)/(twoToAlpha-1);
+        if(k<0) throw new RuntimeException("Negative offset");
 
         return new int[]{d, k};
     }
     public int depth2idx(int depth, int offset){
-        return (1<<(alpha*depth)-1)/(1<<alpha-1)+offset;
+        int a = 1<<(alpha*depth);
+        int b = 1<<alpha;
+        int j = (a-1)/(b-1)+offset;
+        if(j<0) throw new RuntimeException("Negative index");
+        return j;
     }
 }

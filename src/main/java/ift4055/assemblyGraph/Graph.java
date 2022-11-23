@@ -26,7 +26,7 @@ public interface Graph {
         static Node getEndNode(Edge e, int alpha){
             Node u = e.getParent(alpha);
             while (u.getParent().getRank()!=4) u = (Node) u.getParent();
-
+            if(u==null) throw new RuntimeException("Empty end node!");
             return u;
         }
         static Edge initEdge(Segment x){
@@ -131,7 +131,6 @@ public interface Graph {
 
             return false;
         }
-        Edge initEdge();
     }
     interface Connector extends GraphMember{
         default int getRank(){

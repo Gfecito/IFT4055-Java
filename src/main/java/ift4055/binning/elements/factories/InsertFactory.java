@@ -34,6 +34,10 @@ public class InsertFactory implements Factory.Insert {
         return insert;
     }
 
+    public Insert[] getInserts(){
+        return objects;
+    }
+
     private class Insert implements Element.Insert{
         private final int strand;    // encodes for 00 (-1) or 11 (1)
         private final int rMin;

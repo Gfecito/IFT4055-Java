@@ -3,7 +3,6 @@ package ift4055.binning.elements.factories;
 import ift4055.assemblyGraph.Graph;
 import ift4055.assemblyGraph.Graph.*;
 import ift4055.binning.Bin;
-import ift4055.binning.elements.Element;
 import ift4055.binning.elements.Element.*;
 import ift4055.binning.elements.Factory;
 
@@ -45,7 +44,7 @@ public class ConnectorFactory implements Factory.Connector {
             else s.t = newObjects[i-1];               // Next in circular list.
             newObjects[i] = s;
         }
-        sentinel.t = newObjects[-1];                        // Start of circular list.
+        sentinel.t = newObjects[c-1];                        // Start of circular list.
 
         this.objects = newObjects;
     }
@@ -63,7 +62,7 @@ public class ConnectorFactory implements Factory.Connector {
         {
             Connector s = (Connector) sentinel.t;
             sentinel.t = s.t;
-            s.s=s.t=s;
+            s.s = s.t =s;
             return s;
         }
     }
@@ -125,10 +124,8 @@ public class ConnectorFactory implements Factory.Connector {
         }
 
         public void delete() {
+            sentinel.t = this;
             s = null;
-            GraphMember temp = sentinel.t;
-            sentinel.t = this.t;
-            this.t = temp;
         }
 
     }

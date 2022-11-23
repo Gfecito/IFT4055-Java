@@ -38,6 +38,10 @@ public class MatchFactory implements Factory.Match{
         return match;
     }
 
+    public Match[] getMatches(){
+        return objects;
+    }
+
     // M operation of a CIGAR alignment
     public class Match implements Element.Match{
         private Segment parent;

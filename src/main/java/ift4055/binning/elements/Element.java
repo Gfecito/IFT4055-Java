@@ -1,7 +1,13 @@
 package ift4055.binning.elements;
 
+
 import ift4055.binning.Bin;
 import ift4055.binning.Scheme;
+import ift4055.assemblyGraph.Graph.*;
+
+import java.io.*;
+import java.util.LinkedList;
+import java.util.List;
 
 public interface Element {
     Bin getBin();
@@ -194,5 +200,95 @@ public interface Element {
         // Naming
         void setName(String name);
         String getName();
+
+
+
+        /*
+                            GRAPH
+         */
+        default Group readGFA(InputStream I) throws IOException {
+            BufferedReader buffReader = new BufferedReader(new InputStreamReader(I));
+            Group A = this;
+
+            /*
+            While reading the GFA segment (S) lines, build a list of Segment elements for the indexed
+            identifiers i = 1, 2, . . . , n: if there is already a member A.c[i − 1],
+            then use that, or else create a new Segment with its Insert and Base descendants
+            initialized from the GFA sequence (in the same binning scheme as A)
+             */
+            List<Segment> segmentList = new LinkedList<>();
+            String line = buffReader.readLine();
+            String[] fields = line.split("\t");
+            while(line!=null && fields[0].equals("S")){
+                System.out.println("Processing S line: "+line);
+                int index = Integer.parseInt(fields[1]);
+                String sequence = fields[2];
+                if(index>=A.getMembers().length)
+                    System.out.println("Not yet existant segment at index "+index+": "+sequence);
+                else{
+                    Segment segment = (Segment) A.getChild(index);
+                    segmentList.add(segment);
+                }
+
+
+                // Create new segment in same binning scheme.
+
+
+                line = buffReader.readLine();
+                fields = line.split("\t");
+            }
+
+
+            /*
+            At the end of segment lines, when the first link (L) line is encountered,
+            check if A should have more members, i.e., if n is greater than the current number of members in A
+            and thus at least one new Segment was created.
+            If so, create a new Group A′ for n elements, set child-parent pointers with it, and delete A.
+            (If not, set A′ ← A).
+            Call initEdge with each Segment child of A′, keep a lookup of the contig edges by child index.
+             */
+            Edge[] edges = new Edge[A.getMembers().length];
+            for (int i = 0; i < edges.length; i++) {
+                Segment segment = (Segment) A.getChild(i);
+                edges[i]= Edge.initEdge(segment);
+            }
+
+            /*
+            For each link line call C.attachEdges
+             */
+            while(line!=null && fields[0].equals("L")){
+                System.out.println("Processing L line: "+line);
+                int fromIndex = Integer.parseInt(fields[1]);
+                //String fromOrient = fields[2];
+                int toIndex = Integer.parseInt(fields[3]);
+                //String toOrient = fields[4];
+                //String overlap = fields[5];
+
+                if(fromIndex >= edges.length || toIndex >= edges.length){
+                    System.out.println("Ignored link: "+fromIndex+" to "+toIndex);
+                    line = buffReader.readLine();
+                    fields = line.split("\t");
+                    continue;
+                }
+
+                Edge from = edges[fromIndex];
+                Edge to = edges[toIndex];
+
+                from.attach(0,to,1);
+
+
+
+                line = buffReader.readLine();
+                if(line==null) break;
+                fields = line.split("\t");
+            }
+
+
+            System.out.println("Finished constructing assembly graph!");
+            /*
+            Return A′.
+             */
+            return A;
+        }
     }
 }

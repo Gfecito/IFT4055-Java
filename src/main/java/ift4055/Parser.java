@@ -7,9 +7,8 @@ import ift4055.binning.Scheme;
 import ift4055.binning.Bin;
 import ift4055.binning.elements.Element.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InvalidObjectException;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,17 +16,30 @@ public class Parser {
     Scheme rootScheme;
     File sam;
     File fasta;
+    File GFA;
 
     public Parser(File sam, File fasta){
         this.sam = sam;
         this.fasta = fasta;
-
-        rootScheme = new Scheme();
     }
 
     public Scheme populateBinningScheme() throws IOException {
+        rootScheme = new Scheme();
+
         final Group referenceGenome = storeReferenceGenome();
         final Group pairedReads = storePairedReads();
+
+        return rootScheme;
+    }
+    public Scheme readAssembly(File GFA) throws IOException, RuntimeException{
+        if(rootScheme==null) throw new RuntimeException("Binning scheme needs to be populated first!");
+        this.GFA = GFA;
+
+        InputStream I = Files.newInputStream(GFA.toPath());
+
+        Group rootGroup = (Group) rootScheme.getElementByName(fasta.getName());
+        rootGroup = rootGroup.readGFA(I);
+
 
         return rootScheme;
     }
@@ -38,12 +50,11 @@ public class Parser {
         LinkedList<Segment> groupChildren = new LinkedList<>();
 
         // For each chromosome/contig, make a segment.
-        int readPointer = 0;
         ReferenceSequence chromosome = reader.nextSequence();
         System.out.println("Storing reference genome");
         while (chromosome != null) {
             System.out.println("Processing chromosome: "+chromosome.getName()+" of length "+chromosome.length()+" from reference genome");
-            int segmentStart = readPointer;
+            int readPointer = 0;
             String name = chromosome.getName();
             String[] split = split(chromosome.toString());
 
@@ -65,7 +76,7 @@ public class Parser {
                 int wMin = readPointer;
                 int offset = 0;
 
-                Bin chainBin = rootSchemeChild.coveringBin(rMin - segmentStart, rMin + length - segmentStart);
+                Bin chainBin = rootSchemeChild.coveringBin(rMin, rMin + length );
                 // Add insert to bin in scheme of its segment
                 chainBin.newInsert(strand, rMin, span, wMin, bases, offset);
 
@@ -81,6 +92,7 @@ public class Parser {
         int i = 0;
         for (Segment s : groupChildren) {
             group.setChild(i, s); i++;
+            s.setParent(group);
         }
         String name = fasta.getName();
         group.setName(name);
@@ -157,6 +169,8 @@ public class Parser {
             Then process the CIGAR operations while keeping track of reading and writing positions.
              */
             Segment y = B.newSegment();
+            Scheme s = new Scheme(y, alignment.getReadLength());
+            y.setScheme(s);
             // and add its Match and Insert children z as y ← combine(y, z) by parsing
             // the alignment in read position order
             int flags = alignment.getFlags();

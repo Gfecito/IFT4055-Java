@@ -34,8 +34,7 @@ public class NodeFactory implements Factory.Node {
         int c = objects.length;
         c = c%3==0? 3*c/2: 4*c/3;
         Node[] newObjects = new Node[c];
-        for (int i = 0; i < objects.length; i++)
-            newObjects[i] = objects[i];
+        System.arraycopy(objects, 0, newObjects, 0, objects.length);
         for (int i = objects.length; i < c; i++){
             Node s = new Node();
             s.parent = null;
@@ -43,7 +42,7 @@ public class NodeFactory implements Factory.Node {
             else s.child = newObjects[i-1];               // Next in circular list.
             newObjects[i] = s;
         }
-        sentinel.child = newObjects[-1];                        // Start of circular list.
+        sentinel.child = newObjects[c-1];                        // Start of circular list.
 
         this.objects = newObjects;
     }
@@ -106,10 +105,10 @@ public class NodeFactory implements Factory.Node {
         public Graph.Node join(Graph.Node v) {
             Graph.Node u,w,v2,u2;
             u = this;
-
+            if(v==null) return this;
 
             Bin B = Bin.lowestCommonAncestor(u.getBin(),v.getBin());
-            if(B.equals(v.getBin()) && B.equals(u.getBin())) return v.join(u);
+            if(!B.equals(v.getBin()) && B.equals(u.getBin())) return v.join(u);
             if(B.equals(v.getChild().getBin()) && v.getChild().getRank()==3){w = v; v2 = (Node) v.getChild();}
             else{
                 w = B.newNode(); v2 = B.newNode();
@@ -120,23 +119,6 @@ public class NodeFactory implements Factory.Node {
             u2.setParent(v2); w.setChild(u2);
 
             return w;
-        }
-
-        /**
-         * @param v
-         * @return
-         */
-        @Override
-        public boolean deleteMember(Graph.Node v) {
-            return false;
-        }
-
-        /**
-         * @return
-         */
-        @Override
-        public Edge initEdge() {
-            return null;
         }
     }
 }

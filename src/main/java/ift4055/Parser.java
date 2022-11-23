@@ -111,7 +111,7 @@ public class Parser {
             SAMRecord alignment;
 
             try{
-                alignment = iterator.next(); // "MAPQ should be 0 for unmapped read"... skip this alignement
+                alignment = iterator.next(); // "MAPQ should be 0 for unmapped read"... skip this alignment
                 if(alignment.getReferenceName().equals("*")){
                     System.out.println("Reached end of named references. Ending paired read binning");
                     break;
@@ -222,7 +222,7 @@ public class Parser {
         return u;
     }
 
-    private byte[] toBases(String sequence) {
+    public static byte[] toBases(String sequence) {
         char[] nucleotides = sequence.toUpperCase().toCharArray();
         byte[] bases = new byte[nucleotides.length];
         for (int i = 0; i < nucleotides.length; i++) {

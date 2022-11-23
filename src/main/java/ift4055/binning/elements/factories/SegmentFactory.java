@@ -105,6 +105,7 @@ public class SegmentFactory implements Factory.Segment {
             parent = E;
         }
 
+        // Every segment has a scheme for itself, its members are in the scheme.
         public Element[] getMembers() {
             if(child.getRank()==2 && child!=this) return new Element[]{child};
             if(scheme.getBins()==null) return new Element[0];

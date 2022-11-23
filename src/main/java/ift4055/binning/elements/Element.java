@@ -1,6 +1,7 @@
 package ift4055.binning.elements;
 
 
+import ift4055.Parser;
 import ift4055.binning.Bin;
 import ift4055.binning.Scheme;
 import ift4055.assemblyGraph.Graph.*;
@@ -223,12 +224,26 @@ public interface Element {
                 System.out.println("Processing S line: "+line);
                 int index = Integer.parseInt(fields[1]);
                 String sequence = fields[2];
-                if(index>=A.getMembers().length)
-                    System.out.println("Not yet existant segment at index "+index+": "+sequence);
-                else{
-                    Segment segment = (Segment) A.getChild(index);
-                    segmentList.add(segment);
+                Segment segment;
+                // Make new segment
+                if(index>=A.getMembers().length){
+                    System.out.println("Creating new segment: "+index+" with sequence: "+sequence);
+                    segment = A.getBin().newSegment();
+                    segment.setParent(A);
+                    int length = sequence.length();
+                    Scheme segmentScheme = new Scheme(segment, length);
+                    segment.setScheme(segmentScheme);
+                    Bin covering = segmentScheme.coveringBin(0,length);
+
+                    int span = length-1;
+                    byte[] dnaSequence = Parser.toBases(sequence);
+                    // Forward strand
+                    covering.newInsert(1, 0, span, 0, dnaSequence, 0);
                 }
+                // Already existant
+                else segment = (Segment) A.getChild(index);
+
+                segmentList.add(segment);
 
 
                 // Create new segment in same binning scheme.
@@ -245,8 +260,22 @@ public interface Element {
             and thus at least one new Segment was created.
             If so, create a new Group A′ for n elements, set child-parent pointers with it, and delete A.
             (If not, set A′ ← A).
-            Call initEdge with each Segment child of A′, keep a lookup of the contig edges by child index.
              */
+            int n;
+            if((n=segmentList.size())>A.getMembers().length){
+                Bin B = A.getBin();
+                String name = A.getName();
+                A.delete();
+                A = B.newGroup(n);
+                A.setName(name);
+                int i=0;
+                for (Segment segment : segmentList) {
+                    A.setChild(i,segment); segment.setParent(A);
+                    i++;
+                }
+            }
+
+            //Call initEdge with each Segment child of A′, keep a lookup of the contig edges by child index.
             Edge[] edges = new Edge[A.getMembers().length];
             for (int i = 0; i < edges.length; i++) {
                 Segment segment = (Segment) A.getChild(i);
@@ -264,12 +293,8 @@ public interface Element {
                 //String toOrient = fields[4];
                 //String overlap = fields[5];
 
-                if(fromIndex >= edges.length || toIndex >= edges.length){
-                    System.out.println("Ignored link: "+fromIndex+" to "+toIndex);
-                    line = buffReader.readLine();
-                    fields = line.split("\t");
-                    continue;
-                }
+                // 1-indexing to 0-indexing:
+                fromIndex--; toIndex--;
 
                 Edge from = edges[fromIndex];
                 Edge to = edges[toIndex];

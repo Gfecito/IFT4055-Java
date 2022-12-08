@@ -61,7 +61,7 @@ public class Scheme {
                 System.out.println("Processing chromosome: "+chromosome.getName()+" of length "+chromosome.length()+" from reference genome");
                 int readPointer = 0;
                 String name = chromosome.getName();
-                String[] split = chromosome.toString().split("N");
+                String[] split = chromosome.getBaseString().split("N");
 
                 Element.Segment chainParent = root.newSegment();
                 Scheme rootSchemeChild = new Scheme(chainParent, chromosome.length(), alpha, beta);
@@ -76,7 +76,7 @@ public class Scheme {
                     byte[] bases = toBases(sequence);
                     int length = sequence.length();
                     int span = length - 1;
-                    int strand = 1; // I guess? Maybe not. TODO
+                    int strand = 1; // Reference strands are forward
                     int rMin = readPointer;
                     int wMin = readPointer;
                     int offset = 0;
@@ -178,7 +178,7 @@ public class Scheme {
             Then process the CIGAR operations while keeping track of reading and writing positions.
              */
                 Element.Segment y = B.newSegment();
-                Scheme s = new Scheme(y, alignment.getReadLength(), alpha, beta);
+                Scheme s =new Scheme(y, alignment.getReadLength(), 2,10);
                 y.setScheme(s);
                 // and add its Match and Insert children z as y ← combine(y, z) by parsing
                 // the alignment in read position order
@@ -199,10 +199,10 @@ public class Scheme {
                     rMin = wMin = offset;
                     span = e.getLength() - 1;
                     if (e.getOperator().equals(insert)) {
-                        bin.newInsert(strand, rMin, span, wMin, sequence, offset);
+                        y.combine(bin.newInsert(strand, rMin, span, wMin, sequence, offset));
                     } else if (e.getOperator().equals(match)) {
                         bin = scheme.coveringBin(rMin, rMin + offset);
-                        bin.newMatch(strand, rMin, span, wMin, sequence, offset);
+                        y.combine(bin.newMatch(strand, rMin, span, wMin, sequence, offset));
                     } else continue;
                     offset += span;
                 }
@@ -212,7 +212,7 @@ public class Scheme {
             Retrieve read order from FLAGS, setting i ← 0 for first read, i ← 1 for second (last) read. Then combine:
              */
                 int i = ((flags&64)==64)? 1: ((flags&128)==128)? 0: -1;     // -1 for neither first nor second.
-                u = combine(u,i,y);
+                //u = combine(u,i,y);
             }
             samReader.close();
 
@@ -263,7 +263,7 @@ public class Scheme {
         // Root scheme
         if(segment==null){
             bins = new Bin[1][1];
-            bins[0][0] = new Bin(0,0,this);
+            bins[0][0] = new Bin(0,0,0,this);
             segment = null;
             l = maximumHeight = 0;
             lookupTable = new HashMap<>();
@@ -302,7 +302,7 @@ public class Scheme {
     public Bin findBin(int height, int offset){
         int depth = maximumHeight-height;
         Bin bin = bins[depth][offset];
-        if(bin==null) bin = new Bin(height,offset,this);
+        if(bin==null) bin = new Bin(depth, height,offset,this);
         bins[depth][offset] = bin;
         return bin;
     }

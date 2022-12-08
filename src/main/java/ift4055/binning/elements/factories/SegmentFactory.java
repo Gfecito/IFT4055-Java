@@ -97,8 +97,7 @@ public class SegmentFactory implements Factory.Segment {
         }
 
         public Element getChild(int index){
-            if(child.getRank()==2 && child!=this) return child;
-            return getMembers()[index];
+            return child;
         }
 
         public void setParent(Element E) {
@@ -207,7 +206,7 @@ public class SegmentFactory implements Factory.Segment {
             Segment v;
             // Is x a segment, or a match/insert?
             if(x.getRank()==3) v = (Segment) x;
-            else {v=bin.newSegment();v.setChild(x);x.setParent(v);}
+            else {v=bin.newSegment();v.setScheme(s.getScheme());v.setChild(x);x.setParent(v);}
 
             // Insertion at head
             if(bin==sBin){Element temp=s.getChild();s.setChild(v);v.setParent(temp); return s;}
@@ -215,7 +214,7 @@ public class SegmentFactory implements Factory.Segment {
             // New container in B
             Segment u,w;
             u = bin.newSegment(); v.setParent(u);
-            w = bin.newSegment();
+            w = bin.newSegment(); u.setScheme(s.getScheme()); w.setScheme(s.getScheme());
             w.setChild(s); u.setParent(s.getParent()); u.setChild(w); w.setParent(v);
             Bin uBin, uPBin;
             uBin = u.getBin();

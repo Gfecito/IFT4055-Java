@@ -31,7 +31,7 @@ public class CommandLineInterface {
             String line;
             while ((line = buffReader.readLine()) != null) {
                 if (line.equalsIgnoreCase("quit")) break;
-                if (line.equalsIgnoreCase("test")) BinningSchemeTest.run();
+                if (line.equalsIgnoreCase("test")){ BinningSchemeTest.run(); continue;}
                 String[] arguments = line.split(" ");
 
 

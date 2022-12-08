@@ -13,11 +13,11 @@ public class Bin {
     private final Scheme container;
 
 
-    public Bin(int height, int offset, Scheme scheme){
+    public Bin(int depth, int height, int offset, Scheme scheme){
         this.height = height;
         this.offset = offset;
         this.container = scheme;
-        index = scheme.depth2idx(height, offset);
+        index = scheme.depth2idx(depth, offset);
         if(index<0) throw new RuntimeException("Negative index in bin???");
     }
     public Scheme getScheme(){

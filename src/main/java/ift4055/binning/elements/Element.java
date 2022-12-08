@@ -1,7 +1,6 @@
 package ift4055.binning.elements;
 
 
-import ift4055.Parser;
 import ift4055.binning.Bin;
 import ift4055.binning.Scheme;
 import ift4055.assemblyGraph.Graph.*;
@@ -210,6 +209,8 @@ public interface Element {
         default Group readGFA(InputStream I) throws IOException {
             BufferedReader buffReader = new BufferedReader(new InputStreamReader(I));
             Group A = this;
+            int alpha, beta;
+            alpha = 2; beta = 10;
 
             /*
             While reading the GFA segment (S) lines, build a list of Segment elements for the indexed
@@ -231,12 +232,12 @@ public interface Element {
                     segment = A.getBin().newSegment();
                     segment.setParent(A);
                     int length = sequence.length();
-                    Scheme segmentScheme = new Scheme(segment, length);
+                    Scheme segmentScheme = new Scheme(segment, length, alpha, beta);
                     segment.setScheme(segmentScheme);
                     Bin covering = segmentScheme.coveringBin(0,length);
 
                     int span = length-1;
-                    byte[] dnaSequence = Parser.toBases(sequence);
+                    byte[] dnaSequence = Scheme.toBases(sequence);
                     // Forward strand
                     covering.newInsert(1, 0, span, 0, dnaSequence, 0);
                 }

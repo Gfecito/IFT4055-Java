@@ -2,7 +2,6 @@ package ift4055.binning.elements.factories;
 
 import ift4055.binning.Bin;
 import ift4055.binning.elements.Element;
-import ift4055.binning.elements.Element.*;
 import ift4055.binning.elements.Factory;
 
 public class MatchFactory implements Factory.Match{
@@ -16,17 +15,8 @@ public class MatchFactory implements Factory.Match{
         this.bin = bin;
     }
 
-    private void expandCapacity(){
-        int c = objects.length;
-        c = c%3==0? 3*c/2: 4*c/3;
-        Match[] newObjects = new Match[c];
-        System.arraycopy(objects, 0, newObjects, 0, objects.length);
-
-        this.objects = newObjects;
-    }
-
     public Match newMatch(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset) {
-        Segment parent = Bin.ref(bin);
+        Element.Segment parent = Bin.ref(bin);
         // Add children
         for (int i = 0; i < span; i++)
             bin.newSyndrome(dnaSequence[i+offset], rMin+i);
@@ -38,8 +28,23 @@ public class MatchFactory implements Factory.Match{
         return match;
     }
 
+    /**
+     * Replace the current object array with a bigger one,
+     * to be used whenever the previous one is filled.
+     */
+    private void expandCapacity(){
+        int c = objects.length;
+        c = c%3==0? 3*c/2: 4*c/3;
+        Match[] newObjects = new Match[c];
+        System.arraycopy(objects, 0, newObjects, 0, objects.length);
+
+        this.objects = newObjects;
+    }
+
     public Match[] getMatches(){
-        return objects;
+        Match[] matches = new Match[index];
+        System.arraycopy(objects, 0, matches, 0, index);
+        return matches;
     }
 
     // M operation of a CIGAR alignment
@@ -114,5 +119,14 @@ public class MatchFactory implements Factory.Match{
 
         // Deletion
         public void delete(){ parent = null; }
+
+        @Override
+        public String toString(){
+            String match = "Match of span: "+span;
+            match += (isReverseStrand()?" with reversed strand ":" with forward strand ");
+            match += "starting at read position "+rMin+" and write position "+wMin;
+            match += " with parent "+parent.getName()+"\n";
+            return match;
+        }
     }
 }

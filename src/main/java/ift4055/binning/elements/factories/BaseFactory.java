@@ -15,16 +15,6 @@ public class BaseFactory implements Factory.Base {
         nBases=0;
     }
 
-    private void expandCapacity(){
-        int c = bases.length;
-        c = c%3==0? 3*c/2: 4*c/3;
-        int[] newObjects = new int[c];
-        for (int i = 0; i < bases.length; i++)
-            newObjects[i] = bases[i];
-
-        this.bases = newObjects;
-    }
-
     public Base addBase(int b){
         if(nBases >= bases.length/16) expandCapacity();
         int index = nBases;
@@ -37,6 +27,19 @@ public class BaseFactory implements Factory.Base {
         bases[containerIndex] = container;
         nBases++;
         return new Base(b);
+    }
+
+    /**
+     * Replace the current object array with a bigger one,
+     * to be used whenever the previous one is filled.
+     */
+    private void expandCapacity(){
+        int c = bases.length;
+        c = c%3==0? 3*c/2: 4*c/3;
+        int[] newObjects = new int[c];
+        System.arraycopy(bases, 0, newObjects, 0, bases.length);
+
+        this.bases = newObjects;
     }
 
     public Base[] getBases(){
@@ -95,7 +98,6 @@ public class BaseFactory implements Factory.Base {
             return 0;
         }
 
-        // TODO: was it xor or and??
         public Base syndromize(int syndrome){
             int syndromized = base^syndrome;
             return new BaseFactory.Base(syndromized);

@@ -11,61 +11,71 @@ import java.util.List;
 
 public class SegmentFactory implements Factory.Segment {
     private Segment[] objects;
-    private Segment sentinel;
+    private final Segment sentinel;
     Bin bin;
 
-    public SegmentFactory(Bin b)
-    {
+    public SegmentFactory(Bin b) {
         objects = new Segment[16];
         this.bin = b;
 
         sentinel = new Segment();
         sentinel.parent = sentinel.child = sentinel;
-        for (int i = 1; i < objects.length; i++){
+        for (int i = 1; i < objects.length; i++) {
             Segment s = new Segment();
             s.parent = null;
-            if(i==1) s.child = sentinel;              // End of circular list.
-            else s.child = objects[i-1];              // Next in circular list.
+            if (i == 1) s.child = sentinel;              // End of circular list.
+            else s.child = objects[i - 1];              // Next in circular list.
             objects[i] = s;
         }
-        sentinel.child = objects[objects.length-1];                       // Start of circular list.
+        sentinel.child = objects[objects.length - 1];                       // Start of circular list.
 
         objects[0] = sentinel;
     }
 
-    private void expandCapacity(){
-        int c = objects.length;
-        c = c%3==0? 3*c/2: 4*c/3;
-        Segment[] newObjects = new Segment[c];
-        System.arraycopy(objects, 0, newObjects, 0, objects.length);
-        for (int i = objects.length; i < c; i++){
-            Segment s = new Segment();
-            s.parent = null;
-            if(i==objects.length) s.child = sentinel;     // End of circular list.
-            else s.child = newObjects[i-1];               // Next in circular list.
-            newObjects[i] = s;
-        }
-        sentinel.child = newObjects[c-1];                        // Start of circular list.
-
-        this.objects = newObjects;
-    }
-
-    public Segment newSegment()
-    {
-        if (sentinel.child == sentinel)
-        {
+    public Segment newSegment() {
+        if (sentinel.child == sentinel) {
             // if no empty then extend
             expandCapacity();
             Segment s = new Segment();
             s.parent = s.child = s;
             return s;
-        } else
-        {
+        } else {
             Segment s = (Segment) sentinel.child;
             sentinel.child = s.child;
-            s.parent=s.child=s;
+            s.parent = s.child = s;
             return s;
         }
+    }
+
+    /**
+     * Replace the current object array with a bigger one,
+     * to be used whenever the previous one is filled.
+     */
+    private void expandCapacity() {
+        int c = objects.length;
+        c = c % 3 == 0 ? 3 * c / 2 : 4 * c / 3;
+        Segment[] newObjects = new Segment[c];
+        System.arraycopy(objects, 0, newObjects, 0, objects.length);
+        for (int i = objects.length; i < c; i++) {
+            Segment s = new Segment();
+            s.parent = null;
+            if (i == objects.length) s.child = sentinel;     // End of circular list.
+            else s.child = newObjects[i - 1];               // Next in circular list.
+            newObjects[i] = s;
+        }
+        sentinel.child = newObjects[c - 1];                        // Start of circular list.
+
+        this.objects = newObjects;
+    }
+
+    public Segment[] getSegments() {
+        LinkedList<Segment> segments = new LinkedList<>();
+        for (Segment segment : objects) if (segment.parent != null) segments.add(segment);
+
+        Segment[] nodeArray = new Segment[segments.size()];
+        nodeArray = segments.toArray(nodeArray);
+
+        return nodeArray;
     }
 
     /**
@@ -81,23 +91,34 @@ public class SegmentFactory implements Factory.Segment {
         private Scheme scheme;
 
 
-        public Scheme getScheme(){
+        public Scheme getScheme() {
             return scheme;
         }
-        public void setScheme(Scheme scheme){
+
+        public void setScheme(Scheme scheme) {
             this.scheme = scheme;
+            bin.getScheme().addSegmentScheme(this);
         }
 
         public Bin getBin() {
             return bin;
         }
 
-        public Element getParent(int index){
+        /**
+         * @param index ignored
+         * @return the only parent. A segment has 1 parent.
+         */
+        public Element getParent(int index) {
             return parent;
         }
 
-        public Element getChild(int index){
-            return child;
+        /**
+         * @param index only used on leaf segments.
+         * @return segment child if this segment is not a leaf; the member at index otherwise.
+         */
+        public Element getChild(int index) {
+            if (child.getRank() == 2 && child != this) return child;
+            return getMembers()[index];
         }
 
         public void setParent(Element E) {
@@ -106,72 +127,72 @@ public class SegmentFactory implements Factory.Segment {
 
         // Every segment has a scheme for itself, its members are in the scheme.
         public Element[] getMembers() {
-            if(child.getRank()==2 && child!=this) return new Element[]{child};
-            if(scheme.getBins()==null) return new Element[0];
+            if (child.getRank() == 2 && child != this) return new Element[]{child};
+            if (scheme.getBins() == null) return new Element[0];
             Bin[][] bins = scheme.getBins();
             List<Element> members = new LinkedList<>();
-            for (Bin[] level:bins) {
-                for(Bin bin: level){
-                    if(bin==null) continue;
+            for (Bin[] level : bins) {
+                for (Bin bin : level) {
+                    if (bin == null) continue;
                     Insert[] inserts = bin.getInserts();
                     Match[] matches = bin.getMatches();
-                    for (Insert insert : inserts) if(insert!=null) members.add(insert);
-                    for (Match match: matches) if(match!=null) members.add(match);
+                    for (Insert insert : inserts) if (insert != null) members.add(insert);
+                    for (Match match : matches) if (match != null) members.add(match);
                 }
             }
-            if(members.isEmpty()) return new Element[0];
+            if (members.isEmpty()) return new Element[0];
             Element[] membersArray = new Element[members.size()];
             membersArray = members.toArray(membersArray);
             return membersArray;
         }
 
         public void setChild(int index, Element E) {
-            if(child.getRank()==2 && child!=this) child = E;
+            if (child.getRank() == 2 && child != this) child = E;
             else getMembers()[index] = E;
         }
 
         public long getWMin() {
-            if(child.getRank()==2 && child!=this) return child.getWMin();
+            if (child.getRank() == 2 && child != this) return child.getWMin();
 
             Element[] children = getMembers();
             long wMin = Long.MAX_VALUE;
-            for (Element child : children) if(child.getWMin()<wMin) wMin=child.getWMin();
+            for (Element child : children) if (child.getWMin() < wMin) wMin = child.getWMin();
 
             return wMin;
         }
 
         public long getWMax() {
-            if(child.getRank()==2 && child!=this) return child.getWMax();
+            if (child.getRank() == 2 && child != this) return child.getWMax();
 
             Element[] children = getMembers();
             long wMax = Long.MIN_VALUE;
-            for (Element child : children) if(child.getWMax()>wMax) wMax=child.getWMax();
+            for (Element child : children) if (child.getWMax() > wMax) wMax = child.getWMax();
 
             return wMax;
         }
 
         public long getRMin() {
-            if(child.getRank()==2 && child!=this) return child.getRMin();
+            if (child.getRank() == 2 && child != this) return child.getRMin();
 
             Element[] children = getMembers();
             long rMin = Long.MAX_VALUE;
-            for (Element child : children) if(child.getRMin()<rMin) rMin=child.getRMin();
+            for (Element child : children) if (child.getRMin() < rMin) rMin = child.getRMin();
 
             return rMin;
         }
 
         public long getRMax() {
-            if(child.getRank()==2 && child!=this) return child.getRMax();
+            if (child.getRank() == 2 && child != this) return child.getRMax();
 
             Element[] children = getMembers();
             long rMax = Long.MIN_VALUE;
-            for (Element child : children) if(child.getRMax()>rMax) rMax=child.getRMax();
+            for (Element child : children) if (child.getRMax() > rMax) rMax = child.getRMax();
 
             return rMax;
         }
 
         public long getSpan() {
-            return scheme.getLength()-1;
+            return scheme.getLength() - 1;
         }
 
         public Base getNucleotideAt(int index) {
@@ -196,46 +217,60 @@ public class SegmentFactory implements Factory.Segment {
         }
 
 
-
-
         // Update element tree, and return a segment containing x and members of s.
-        public Segment combine(Element x){
+        public Segment combine(Element x) {
             Segment s = this;
-            Bin sBin = s.getBin(); Bin xBin = x.getBin();
-            Bin bin = Bin.lowestCommonAncestor(sBin,xBin);
+            Bin sBin = s.getBin();
+            Bin xBin = x.getBin();
+            Bin bin = Bin.lowestCommonAncestor(sBin, xBin);
             Segment v;
             // Is x a segment, or a match/insert?
-            if(x.getRank()==3) v = (Segment) x;
-            else {v=bin.newSegment();v.setScheme(s.getScheme());v.setChild(x);x.setParent(v);}
+            if (x.getRank() == 3) v = (Segment) x;
+            else {
+                v = bin.newSegment();
+                v.setChild(x);
+                x.setParent(v);
+            }
 
             // Insertion at head
-            if(bin==sBin){Element temp=s.getChild();s.setChild(v);v.setParent(temp); return s;}
+            if (bin == sBin) {
+                Element temp = s.getChild();
+                s.setChild(v);
+                v.setParent(temp);
+                return s;
+            }
 
             // New container in B
-            Segment u,w;
-            u = bin.newSegment(); v.setParent(u);
-            w = bin.newSegment(); u.setScheme(s.getScheme()); w.setScheme(s.getScheme());
-            w.setChild(s); u.setParent(s.getParent()); u.setChild(w); w.setParent(v);
+            Segment u, w;
+            u = bin.newSegment();
+            v.setParent(u);
+            w = bin.newSegment();
+            w.setChild(s);
+            u.setParent(s.getParent());
+            u.setChild(w);
+            w.setParent(v);
             Bin uBin, uPBin;
             uBin = u.getBin();
             uPBin = u.getParent().getBin();
-            if(Bin.lowestCommonAncestor(uBin,uPBin)!=uPBin) u.raiseGroup();
+            if (Bin.lowestCommonAncestor(uBin, uPBin) != uPBin) u.raiseGroup();
             return u;
         }
+
         // Updates binning for rank4 parent of u.
-        public Group raiseGroup(){
+        public Group raiseGroup() {
             Segment u = this;
             Element v;
             Group w;
             Bin bin;
             int m;
-            v = u.getParent(); bin = Bin.lowestCommonAncestor(u.getBin(),v.getBin());
-            if(bin==v.getBin()) return (Group) v;
+            v = u.getParent();
+            bin = Bin.lowestCommonAncestor(u.getBin(), v.getBin());
+            if (bin == v.getBin()) return (Group) v;
 
             m = u.getMembers().length;
             w = bin.newGroup(m);
             for (int i = 0; i < m; i++) {
-                w.setChild(i,u.getChild(i));
+                w.setChild(i, u.getChild(i));
                 u.getChild(i).setParent(w);
             }
             w.setName(u.getName());

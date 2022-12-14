@@ -5,30 +5,81 @@ import ift4055.binning.elements.Element.*;
 import ift4055.binning.Scheme;
 import ift4055.binning.Bin;
 
+/**
+ * Our representation of the assembly graph.
+ */
 public interface Graph {
+    /**
+     * Elements of our assembly graph.
+     */
     interface GraphMember{
+        /**
+         *
+         * @return the rank in the scheme's hierarchy of this element.
+         */
         int getRank();
+
+        /**
+         *
+         * @return the bin where this element is located in its scheme.
+         */
         Bin getBin();
+
+        /**
+         * Deletes this element. Usually by setting its child and parent to null.
+         */
+        void delete();
     }
     interface Edge extends GraphMember{
         default int getRank(){
             return 2;
         }
+
+        /**
+         *
+         * @return the reference segment of this edge.
+         */
         Segment getReference();
+
+        /**
+         *
+         * @return a tuple with the interval covered by this edge (start, end).
+         */
         int[] getInterval();
+
+        /**
+         *
+         * @param i determines which parent to return.
+         * @return one of the parent node of this edge, if i=0 returns the source, if i=1 returns the target.
+         */
         Node getParent(int i);
 
+        /**
+         *
+         * @param i determines which parent to set; 0 for source, 1 for target.
+         * @param v the node which will be set as that parent.
+         */
         void setParent(int i, Node v);
-        void delete();
 
-
-
+        /**
+         *
+         * @param e the edge of which we wish to find the end node.
+         * @param alpha the direction in which we search: source or target.
+         * @return the end node in that direction.
+         */
         static Node getEndNode(Edge e, int alpha){
             Node u = e.getParent(alpha);
+            // Search for the node connected to a Connector
             while (u.getParent().getRank()!=4) u = (Node) u.getParent();
             if(u==null) throw new RuntimeException("Empty end node!");
             return u;
         }
+
+        /**
+         * Initializes an edge over a segment.
+         * @param x the segment corresponding to our edge.
+         * @return the new edge.
+         */
         static Edge initEdge(Segment x){
             Scheme H = x.getScheme();
             int i = (int) x.getWMin(); int sigma = (int) (1 + x.getWMax() - i);
@@ -44,6 +95,14 @@ public interface Graph {
         }
 
         /* INSTANCE METHODS */
+
+        /**
+         * Connects this edge with another one.
+         * @param alpha is this edge the target or the source.
+         * @param b the other edge we connect to.
+         * @param beta is b the target or the source.
+         * @return the connector connecting this edge to b.
+         */
         default Connector attach(int alpha, Edge b, int beta){
             Edge a = this;
             Node u,v;
@@ -60,6 +119,16 @@ public interface Graph {
             }
             return r;
         }
+
+        /**
+         * Detaches a pair of endpoints. The detachment corresponds to uncoupling
+         * the edges from their current endnodes, and creates a new connector edge.
+         *
+         * @param alpha determines if we take the source or target of this edge.
+         * @param b the edge with the other endpoint.
+         * @param beta determines if we take the source or target of b.
+         * @return the new connector edge, adjacent to a and b.
+         */
         default Connector detach(int alpha, Edge b, int beta){
             Edge a = this;
             Node u,v;
@@ -80,21 +149,55 @@ public interface Graph {
             return s;
         }
     }
+
+    /**
+     * Elements maintaining the hierarchy and structure of our graph.
+     */
     interface Node extends GraphMember{
         default int getRank(){
             return 3;
         }
+
+        /**
+         *
+         * @return the parent of this node.
+         */
         GraphMember getParent();
+
+        /**
+         *
+         * @return the child of this node.
+         */
         GraphMember getChild();
+
+        /**
+         *
+         * @param parent the new parent of this node.
+         */
         void setParent(GraphMember parent);
+
+        /**
+         *
+         * @param child the new child of this node.
+         */
         void setChild(GraphMember child);
 
 
-        void delete();
-
 
         /* INSTANCE METHODS */
+
+        /**
+         * Joins this node and v, creating a new node, connected with this and v.
+         * @param v the node we join to.
+         * @return the new node.
+         */
         Node join(Node v);
+
+        /**
+         * Removes a leaf v from u, succeeds if v is connected to v, fails otherwise.
+         * @param v the leaf
+         * @return whether we succeeded in removing the leaf v from u
+         */
         default boolean deleteMember(Node v){
             GraphMember w0,v2;
             Node u,w,w2,v3;
@@ -132,18 +235,44 @@ public interface Graph {
             return false;
         }
     }
+
+    /**
+     * Ensure proper double-strandedness.
+     */
     interface Connector extends GraphMember{
         default int getRank(){
             return 4;
         }
+
+        /**
+         *
+         * @param i 0 to get the source, and 1 to get the target.
+         * @return the source or target.
+         */
         Node getChild(int i);
 
+        /**
+         *
+         * @param i 0 to set the source, 1 to set the target.
+         * @param node the node to be set.
+         */
         void setChild(int i, Node node);
-        void delete();
 
         /* INSTANCE METHODS */
-        // Give a warning if creates a loop connector (s = t and eta = −1)
+
+        /**
+         * Joins this connector and t, creating a new connector.
+         * Give a warning if creates a loop connector (s = t and eta = −1).
+         * @param t the connector we're connecting to.
+         * @param eta the orientation of t.
+         * @return the new connector, located at the lca.
+         */
         Connector join(Connector t, int eta);
+
+        /**
+         * Deletes this connector if it is isolated/disjoint.
+         * @return whether the deletion was successful.
+         */
         default boolean deleteIfDisjoint(){
             Connector r = this;
             Node u,v;

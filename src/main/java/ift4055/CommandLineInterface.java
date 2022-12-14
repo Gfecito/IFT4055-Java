@@ -8,7 +8,12 @@ import java.io.*;
 
 public class CommandLineInterface {
 
-    public static void main(String[] args) throws IOException {
+    /**
+     * The command line interface for our program.
+     * It displays its instructions upon execution.
+     * @param args ignored.
+     */
+    public static void main(String[] args) {
         System.out.println("\n\n\n\nProgram started\n\n");
         System.out.println("You can populate a binning structure based on a FASTA file.and SAM file.");
         System.out.println("You can add its paired reads through the group's corresponding SAM file.");
@@ -29,9 +34,22 @@ public class CommandLineInterface {
             sam = null;     samRead = false;
             gfa = null;     gfaRead = false;
             String line;
+
             while ((line = buffReader.readLine()) != null) {
+                String endOfCommand = "Finalized processing command: " + line + "\n";
+                endOfCommand += "Reminder: you can populate with the following files:\n " +
+                        "-fasta path/to/reference.fasta -sam path/to/pairedReads.sam -gfa path/to/assembly.gfa\n";
+                endOfCommand += "To visualize a test of the binning structure enter 'test'\n";
+                endOfCommand += "To exit enter `quit`\n";
+
+
+
                 if (line.equalsIgnoreCase("quit")) break;
-                if (line.equalsIgnoreCase("test")){ BinningSchemeTest.run(); continue;}
+                if (line.equalsIgnoreCase("test")){
+                    BinningSchemeTest.run();
+                    System.out.println(endOfCommand);
+                    continue;
+                }
                 String[] arguments = line.split(" ");
 
 
@@ -64,7 +82,7 @@ public class CommandLineInterface {
                 if (fasta == null) System.out.println("No fasta file has been provided, but is necessary.");
                 else try {
                     if(!fastaRead){
-                        root.storeReferenceGenome(fasta);
+                        root.storeReferenceGenome(fasta, true);
                         fastaRead = true;
                     }
                 } catch (Exception e) {
@@ -73,7 +91,7 @@ public class CommandLineInterface {
                 if (sam == null) System.out.println("No sam file provided, paired reads wont be accessible.");
                 else try {
                     if(!samRead){
-                        root.storePairedReads(sam);
+                        root.storePairedReads(sam, true);
                         samRead = true;
                     }
                 } catch (Exception e) {
@@ -82,18 +100,20 @@ public class CommandLineInterface {
                 if (gfa == null) System.out.println("No gfa file provided, assembly wont be built.");
                 else try {
                     if(!gfaRead){
-                        root.readAssembly(gfa);
+                        root.readAssembly(gfa, true);
                         gfaRead = true;
                     }
                 } catch (Exception e) {
                     System.out.println("Error while trying to create assembly graph: " + e);
                 }
-
-                System.out.println("Finalized processing command: " + line);
+                System.out.println(endOfCommand);
             }
 
         } catch (IOException ioe) {
             System.out.println("Exception while reading input " + ioe);
+        }
+        catch (Exception e) {
+            System.out.println("Unexpected exception " + e);
         }
         System.out.println("\n\nProgram finalized execution successfully\n\n\n\n");
     }

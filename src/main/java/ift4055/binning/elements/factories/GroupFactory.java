@@ -16,16 +16,6 @@ public class GroupFactory implements Factory.Group {
         this.bin = bin;
     }
 
-    private void expandCapacity(){
-        int c = objects.length;
-        c = c%3==0? 3*c/2: 4*c/3;
-        Group[] newObjects = new Group[c];
-        for (int i = 0; i < objects.length; i++)
-            newObjects[i] = objects[i];
-
-        this.objects = newObjects;
-    }
-
     public Group newGroup(int nMembers){
         Group group = new Group(nMembers);
 
@@ -34,6 +24,20 @@ public class GroupFactory implements Factory.Group {
         index++;
         return group;
     }
+
+    /**
+     * Replace the current object array with a bigger one,
+     * to be used whenever the previous one is filled.
+     */
+    private void expandCapacity(){
+        int c = objects.length;
+        c = c%3==0? 3*c/2: 4*c/3;
+        Group[] newObjects = new Group[c];
+        System.arraycopy(objects, 0, newObjects, 0, objects.length);
+
+        this.objects = newObjects;
+    }
+
     public class Group implements Element.Group{
         Segment[] members;
         String name;

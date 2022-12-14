@@ -14,15 +14,6 @@ public class SyndromeFactory implements Factory.Syndrome {
         this.length = 0;
     }
 
-    private void expandCapacity(){
-        int c = objects.length;
-        c = c%3==0? 3*c/2: 4*c/3;
-        int[] newObjects = new int[c];
-        System.arraycopy(objects, 0, newObjects, 0, objects.length);
-
-        this.objects = newObjects;
-    }
-
     public Syndrome newSyndrome(int syndrome, int readPosition) {
         if(length>= objects.length) expandCapacity();
         int index = length;        // Add at the end
@@ -31,6 +22,19 @@ public class SyndromeFactory implements Factory.Syndrome {
         objects[index] = val;
         length++;
         return new Syndrome(syndrome, readPosition);
+    }
+
+    /**
+     * Replace the current object array with a bigger one,
+     * to be used whenever the previous one is filled.
+     */
+    private void expandCapacity(){
+        int c = objects.length;
+        c = c%3==0? 3*c/2: 4*c/3;
+        int[] newObjects = new int[c];
+        System.arraycopy(objects, 0, newObjects, 0, objects.length);
+
+        this.objects = newObjects;
     }
 
     public Syndrome[] getSyndromes(){

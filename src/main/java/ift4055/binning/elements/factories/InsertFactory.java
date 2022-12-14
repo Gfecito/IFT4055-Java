@@ -15,15 +15,6 @@ public class InsertFactory implements Factory.Insert {
         this.bin = bin;
     }
 
-    private void expandCapacity(){
-        int c = objects.length;
-        c = c%3==0? 3*c/2: 4*c/3;
-        Insert[] newObjects = new Insert[c];
-        System.arraycopy(objects, 0, newObjects, 0, objects.length);
-
-        this.objects = newObjects;
-    }
-
     public Insert newInsert(int strand, int rMin, int span, int wMin, byte[] dnaSequence, int offset) {
         Insert insert = new Insert(strand, rMin, span, wMin);
         insert.populateInsert(dnaSequence, offset);
@@ -34,8 +25,23 @@ public class InsertFactory implements Factory.Insert {
         return insert;
     }
 
+    /**
+     * Replace the current object array with a bigger one,
+     * to be used whenever the previous one is filled.
+     */
+    private void expandCapacity(){
+        int c = objects.length;
+        c = c%3==0? 3*c/2: 4*c/3;
+        Insert[] newObjects = new Insert[c];
+        System.arraycopy(objects, 0, newObjects, 0, objects.length);
+
+        this.objects = newObjects;
+    }
+
     public Insert[] getInserts(){
-        return objects;
+        Insert[] inserts = new Insert[index];
+        System.arraycopy(objects, 0, inserts, 0, index);
+        return inserts;
     }
 
     private class Insert implements Element.Insert{
@@ -52,6 +58,11 @@ public class InsertFactory implements Factory.Insert {
             parent = Bin.ref(bin);
         }
 
+        /**
+         * Adds this insert's nucleotides to the same bin.
+         * @param dnaSequence a sequence stream.
+         * @param offset where this insert starts in the stream.
+         */
         private void populateInsert(byte[] dnaSequence, int offset){
             for (int i = 0; i < span; i++) bin.addBase(dnaSequence[i+offset]);
         }
@@ -131,5 +142,15 @@ public class InsertFactory implements Factory.Insert {
 
         // Deletion
         public void delete(){parent=null;}
+
+
+        @Override
+        public String toString(){
+            String insert = "Match of span: "+span;
+            insert += (isReverseStrand()?" with reversed strand ":" with forward strand ");
+            insert += "starting at read position "+rMin+" and write position "+wMin;
+            insert += " with parent "+parent.getName()+"\n";
+            return insert;
+        }
     }
 }

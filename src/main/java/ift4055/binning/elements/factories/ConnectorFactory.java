@@ -3,13 +3,15 @@ package ift4055.binning.elements.factories;
 import ift4055.assemblyGraph.Graph;
 import ift4055.assemblyGraph.Graph.*;
 import ift4055.binning.Bin;
-import ift4055.binning.elements.Element.*;
+import ift4055.binning.elements.Element;
 import ift4055.binning.elements.Factory;
+
+import java.util.LinkedList;
 
 
 public class ConnectorFactory implements Factory.Connector {
     private Connector[] objects;
-    private Connector sentinel;
+    private final Connector sentinel;
     Bin bin;
 
     public ConnectorFactory(Bin b)
@@ -31,24 +33,10 @@ public class ConnectorFactory implements Factory.Connector {
         objects[0] = sentinel;
     }
 
-    private void expandCapacity(){
-        int c = objects.length;
-        c = c%3==0? 3*c/2: 4*c/3;
-        Connector[] newObjects = new Connector[c];
-        for (int i = 0; i < objects.length; i++)
-            newObjects[i] = objects[i];
-        for (int i = objects.length; i < c; i++){
-            Connector s = new Connector();
-            s.s = null;
-            if(i==objects.length) s.t = sentinel;     // End of circular list.
-            else s.t = newObjects[i-1];               // Next in circular list.
-            newObjects[i] = s;
-        }
-        sentinel.t = newObjects[c-1];                        // Start of circular list.
-
-        this.objects = newObjects;
-    }
-
+    /**
+     *
+     * @return a connector taken from the free connector chain.
+     */
     public Connector newConnector()
     {
         if (sentinel.t == sentinel)
@@ -67,12 +55,43 @@ public class ConnectorFactory implements Factory.Connector {
         }
     }
 
+    /**
+     * Replace the current object array with a bigger one,
+     * to be used whenever the previous one is filled.
+     */
+    private void expandCapacity(){
+        int c = objects.length;
+        c = c%3==0? 3*c/2: 4*c/3;
+        Connector[] newObjects = new Connector[c];
+        System.arraycopy(objects, 0, newObjects, 0, objects.length);
+        for (int i = objects.length; i < c; i++){
+            Connector s = new Connector();
+            s.s = null;
+            if(i==objects.length) s.t = sentinel;     // End of circular list.
+            else s.t = newObjects[i-1];               // Next in circular list.
+            newObjects[i] = s;
+        }
+        sentinel.t = newObjects[c-1];                        // Start of circular list.
+
+        this.objects = newObjects;
+    }
+
+    public Connector[] getConnectors(){
+        LinkedList<Connector> connectors = new LinkedList<>();
+        for (Connector connector : objects) if(connector.s!=null) connectors.add(connector);
+
+        Connector[] connectorArray = new Connector[connectors.size()];
+        connectorArray = connectors.toArray(connectorArray);
+
+        return connectorArray;
+    }
+
 
     private class Connector implements Graph.Connector {
         private GraphMember s;
         private GraphMember t;
         private String name;
-        private Segment reference;
+        private Element.Segment reference;
         private int orientation;
 
 
@@ -80,20 +99,26 @@ public class ConnectorFactory implements Factory.Connector {
             return bin;
         }
 
-        public Node getChild(int index){
+        public Graph.Node getChild(int index){
             if(index>1 || index<0) throw new IllegalArgumentException();
-            return (Node) (index==1? t: s);
+            return (Graph.Node) (index==1? t: s);
         }
 
-        public void setChild(int index, Node child){
+        /**
+         * @param index    0 to set the source, 1 to set the target.
+         * @param child the node to be set.
+         */
+        @Override
+        public void setChild(int index, Graph.Node child){
             if(index>1 || index<0) throw new IllegalArgumentException();
             if(index==1) t=child;
             else s=child;
         }
 
         public Graph.Connector join(Graph.Connector t, int eta) {
+            if(this.equals(t) && eta==-1) System.out.println("Warning: loop connector created.");
             if(this.equals(t) && orientation == 1) return this;
-            Node u0, u1, v0, v1, w0, w1;
+            Graph.Node u0, u1, v0, v1, w0, w1;
             Graph.Connector s,r;
             s = this;
             u0 = s.getChild(0); u1 = s.getChild(1);
@@ -115,10 +140,18 @@ public class ConnectorFactory implements Factory.Connector {
             return r;
         }
 
+        /**
+         *
+         * @return lowest read position of connector's reference.
+         */
         public long getRMin() {
             return reference.getRMin();
         }
 
+        /**
+         *
+         * @return span covered by connector's reference.
+         */
         public long getSpan() {
             return reference.getSpan();
         }

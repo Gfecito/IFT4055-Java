@@ -5,10 +5,12 @@ import ift4055.assemblyGraph.Graph.*;
 import ift4055.binning.Bin;
 import ift4055.binning.elements.Factory;
 
+import java.util.LinkedList;
+
 
 public class NodeFactory implements Factory.Node {
     private Node[] objects;
-    private Node sentinel;
+    private final Node sentinel;
     Bin bin;
 
     public NodeFactory(Bin b)
@@ -30,6 +32,26 @@ public class NodeFactory implements Factory.Node {
         objects[0] = sentinel;
     }
 
+    public Node newNode(){
+        if (sentinel.child == sentinel){
+            // if no empty then extend
+            expandCapacity();
+            Node s = new Node();
+            s.parent = s.child = s;
+            return s;
+        }
+        else {
+            Node s = (Node) sentinel.child;
+            sentinel.child = s.child;
+            s.parent=s.child=s;
+            return s;
+        }
+    }
+
+    /**
+     * Replace the current object array with a bigger one,
+     * to be used whenever the previous one is filled.
+     */
     private void expandCapacity(){
         int c = objects.length;
         c = c%3==0? 3*c/2: 4*c/3;
@@ -47,30 +69,18 @@ public class NodeFactory implements Factory.Node {
         this.objects = newObjects;
     }
 
-    public Node newNode()
-    {
-        if (sentinel.child == sentinel)
-        {
-            // if no empty then extend
-            expandCapacity();
-            Node s = new Node();
-            s.parent = s.child = s;
-            return s;
-        } else
-        {
-            Node s = (Node) sentinel.child;
-            sentinel.child = s.child;
-            s.parent=s.child=s;
-            return s;
-        }
+
+    public Node[] getNodes(){
+        LinkedList<Node> nodes = new LinkedList<>();
+        for (Node node : objects) if(node.parent!=null) nodes.add(node);
+
+        Node[] nodeArray = new Node[nodes.size()];
+        nodeArray = nodes.toArray(nodeArray);
+
+        return nodeArray;
     }
 
-    /**
-     * Multiple Segment children of the same Segment are stored by a circular linked list across the members:
-     * Child stores a reference to a rank-3 or rank-2 element,
-     * and Parent stores reference to the next sibling,
-     * or to the parent Segment if the last child on the list
-     */
+
     private class Node implements Graph.Node {
         private GraphMember parent;
         private GraphMember child;
@@ -95,6 +105,7 @@ public class NodeFactory implements Factory.Node {
         public void setChild(GraphMember E) {
             child = E;
         }
+
 
         public void delete() {
             parent = null;
